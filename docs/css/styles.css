@@ -7,40 +7,61 @@ body {
   line-height: 1.6;
 }
 .container {
-  max-width: 720px;
+  max-width: 600px;
   margin: 0 auto;
-  padding: 3rem 1.5rem;
+  padding: 5rem 1.5rem;
+}
+.intro {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e1e8ed;
 }
 h1 {
-  font-size: 2.2rem;
-  margin-bottom: 0.25rem;
+  font-size: 2.4rem;
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.02em;
 }
-h2 {
-  font-size: 1.2rem;
-  font-weight: 400;
-  color: #555;
-  margin-top: 0;
+.tagline {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #657786;
 }
 p {
-  margin-top: 1.5rem;
+  margin-top: 0;
   font-size: 1rem;
+  color: #333;
+  max-width: 520px;
+}
+.log-note {
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: #657786;
+}
+.log-note a {
+  color: #1da1f2;
+  text-decoration: none;
+}
+.log-note a:hover {
+  text-decoration: underline;
 }
 .links {
-  margin-top: 2rem;
+  margin-top: 2.5rem;
+  display: flex;
+  gap: 1.25rem;
 }
 .links a {
-  margin-right: 1rem;
   text-decoration: none;
-  color: #0066cc;
+  color: #1da1f2;
   font-weight: 500;
+  font-size: 0.95rem;
 }
 .links a:hover {
   text-decoration: underline;
 }
 footer {
-  margin-top: 4rem;
-  font-size: 0.85rem;
-  color: #777;
+  margin-top: 5rem;
+  font-size: 0.8rem;
+  color: #aaa;
 }
 
 /* Log page */
