@@ -3,3 +3,7 @@
 !.vscode/settings.json
 node_modules/
 .env
+
+# Data dump folder — contents are local only, never commit
+datadump/*
+!datadump/.gitkeep

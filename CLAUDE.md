@@ -43,6 +43,15 @@ Use today's date. Default location is **Winston-Salem, NC** unless the user spec
 - Keep post text as the user wrote it — don't rewrite or polish it
 - After adding the entry, ask if the user wants to commit and push
 
+## Data dump folder
+
+`datadump/` is a local-only scratch folder for dropping in screenshots, images, reference files, or any content needed during a session. Its contents are gitignored and will never be committed.
+
+### Rules
+- Remind the user to clean out `datadump/` at the end of each session
+- Never commit anything from `datadump/` — only `datadump/.gitkeep` is tracked
+- If the user pastes or references a file for context, suggest saving it to `datadump/` first
+
 ## Structure
 
 ```
