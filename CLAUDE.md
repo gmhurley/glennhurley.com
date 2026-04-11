@@ -18,7 +18,7 @@ Use today's date. Default location is **Winston-Salem, NC** unless the user spec
       <span class="tweet-name">Glenn Hurley</span>
       <span class="tweet-handle">@glennhurley</span>
       <span class="tweet-dot">&middot;</span>
-      <time class="tweet-time" datetime="YYYY-MM-DD">Mon D, YYYY</time>
+      <time class="tweet-time" datetime="YYYY-MM-DDTHH:MM">H:MM AM/PM &middot; Mon D, YYYY</time>
     </div>
     <p class="tweet-text">Post content here.</p>
     <div class="tweet-actions">
@@ -36,6 +36,7 @@ Use today's date. Default location is **Winston-Salem, NC** unless the user spec
 ```
 
 ### Rules
+- Always ask the user for the current time before adding a post
 - Entries go **newest first** — insert above all existing entries
 - `id` on the article is `YYYY-MM-DD` (used for shareable anchor links)
 - If two posts share the same date, append a letter: `2026-04-11b`, `2026-04-11c`
