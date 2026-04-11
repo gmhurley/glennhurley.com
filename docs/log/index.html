@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Basic -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Log | Glenn Hurley</title>
+
+  <!-- SEO -->
+  <meta
+    name="description"
+    content="A running log of thoughts from Glenn Hurley."
+  />
+  <link rel="canonical" href="https://glennhurley.com/log" />
+
+  <!-- Favicon -->
+  <link rel="icon" href="/favicon.ico" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/log.css" />
+</head>
+<body>
+  <div class="twitter-layout">
+
+    <div class="feed-column">
+
+      <!-- Profile header -->
+      <div class="profile-header">
+        <div class="profile-banner"></div>
+        <div class="profile-header-body">
+        <div class="profile-avatar">GH</div>
+        <div class="profile-info">
+          <span class="profile-name">Glenn Hurley</span>
+          <span class="profile-handle">@glennhurley</span>
+          <span class="profile-bio">Software developer. Building practical, reliable systems.</span>
+          <a class="profile-back" href="/">&larr; glennhurley.com</a>
+        </div>
+        </div>
+      </div>
+
+      <!-- Feed -->
+      <div class="feed">
+
+        <!-- TEMPLATE: copy this block to add a new entry
+        <article class="tweet" id="YYYY-MM-DD">
+          <div class="tweet-avatar">GH</div>
+          <div class="tweet-body">
+            <div class="tweet-meta">
+              <span class="tweet-name">Glenn Hurley</span>
+              <span class="tweet-handle">@glennhurley</span>
+              <span class="tweet-dot">&middot;</span>
+              <time class="tweet-time" datetime="YYYY-MM-DD">Month D, YYYY</time>
+            </div>
+            <p class="tweet-text">Your thought here.</p>
+            <div class="tweet-actions">
+              <span class="tweet-location">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                Winston-Salem, NC
+              </span>
+              <button class="share-btn" aria-label="Share this post">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.59l5.7 5.7-1.41 1.42L13 6.41V16h-2V6.41l-3.3 3.3-1.41-1.42L12 2.59zM21 15l-.02 3.51c0 1.38-1.12 2.49-2.5 2.49H5.5C4.11 21 3 19.88 3 18.5V15h2v3.5c0 .28.22.5.5.5h12.98c.28 0 .5-.22.5-.5L19 15h2z"/></svg>
+                Share
+              </button>
+            </div>
+          </div>
+        </article>
+        -->
+
+        <article class="tweet" id="2026-04-11">
+          <div class="tweet-avatar">GH</div>
+          <div class="tweet-body">
+            <div class="tweet-meta">
+              <span class="tweet-name">Glenn Hurley</span>
+              <span class="tweet-handle">@glennhurley</span>
+              <span class="tweet-dot">&middot;</span>
+              <time class="tweet-time" datetime="2026-04-11">Apr 11, 2026</time>
+            </div>
+            <p class="tweet-text">Starting a log. Somewhere between a blog and a Twitter feed &mdash; short thoughts, no titles, just a running stream.</p>
+            <div class="tweet-actions">
+              <span class="tweet-location">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                Winston-Salem, NC
+              </span>
+              <button class="share-btn" aria-label="Share this post">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.59l5.7 5.7-1.41 1.42L13 6.41V16h-2V6.41l-3.3 3.3-1.41-1.42L12 2.59zM21 15l-.02 3.51c0 1.38-1.12 2.49-2.5 2.49H5.5C4.11 21 3 19.88 3 18.5V15h2v3.5c0 .28.22.5.5.5h12.98c.28 0 .5-.22.5-.5L19 15h2z"/></svg>
+                Share
+              </button>
+            </div>
+          </div>
+        </article>
+
+      </div>
+
+      <footer class="log-footer">
+        &copy; <span id="year"></span> Glenn Hurley
+      </footer>
+    </div>
+
+  </div>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    document.querySelectorAll(".share-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const article = btn.closest(".tweet");
+        const url = `${location.origin}/log#${article.id}`;
+
+        if (navigator.share) {
+          await navigator.share({ url });
+        } else {
+          await navigator.clipboard.writeText(url);
+          const original = btn.innerHTML;
+          btn.textContent = "Copied!";
+          setTimeout(() => { btn.innerHTML = original; }, 2000);
+        }
+      });
+    });
+  </script>
+  <script data-goatcounter="https://shroomslice.goatcounter.com/count"
+          async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
