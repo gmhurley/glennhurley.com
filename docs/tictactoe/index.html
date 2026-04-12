@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tic-Tac-Toe &mdash; Glenn Hurley</title>
+  <link rel="icon" href="/favicon.ico" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #f8f9fb;
+      color: #222;
+    }
+
+    /* ── Site header ── */
+    .site-header {
+      border-bottom: 1px solid #e1e8ed;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1.25rem;
+    }
+    .site-header a {
+      text-decoration: none;
+      color: #1da1f2;
+      font-size: 0.85rem;
+    }
+    .site-header a:hover { text-decoration: underline; }
+    .header-title {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .header-spacer { width: 6rem; } /* balance the back link */
+
+    /* ── Game area ── */
+    .game-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1.5rem;
+      gap: 1.75rem;
+    }
+
+    /* Score */
+    .score {
+      display: flex;
+      gap: 2rem;
+    }
+    .score-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+    }
+    .score-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #aaa;
+    }
+    .score-value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: #222;
+    }
+    .score-item.wins  .score-value { color: #1da1f2; }
+    .score-item.losses .score-value { color: #e05; }
+
+    /* Status */
+    .status {
+      font-size: 1rem;
+      color: #657786;
+      min-height: 1.5rem;
+      text-align: center;
+    }
+
+    /* Board */
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 96px);
+      grid-template-rows: repeat(3, 96px);
+      width: 288px;
+      height: 288px;
+      border: 2px solid #222;
+      border-radius: 4px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 64px;
+      font-weight: 700;
+      cursor: pointer;
+      border-right: 2px solid #222;
+      border-bottom: 2px solid #222;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.1s;
+      line-height: 1;
+    }
+    .cell:nth-child(3n)   { border-right: none; }
+    .cell:nth-child(n+7)  { border-bottom: none; }
+
+    .cell:not(.taken):hover { background: #f0f4f8; }
+    .cell:not(.taken):active { background: #e1e8ed; }
+
+    .cell.x { color: #1da1f2; }
+    .cell.o { color: #e05; }
+
+    .cell.win-cell { background: #eaf6ff; }
+    .cell.o.win-cell { background: #fff0f0; }
+
+    /* New game button */
+    .new-game-btn {
+      padding: 0.6rem 1.75rem;
+      background: #222;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .new-game-btn:hover { opacity: 0.75; }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <a href="/">&larr; glennhurley.com</a>
+    <span class="header-title">Tic-Tac-Toe</span>
+    <span class="header-spacer"></span>
+  </header>
+
+  <div class="game-area">
+
+    <div class="score">
+      <div class="score-item wins">
+        <span class="score-label">Wins</span>
+        <span class="score-value" id="score-w">0</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">Draws</span>
+        <span class="score-value" id="score-d">0</span>
+      </div>
+      <div class="score-item losses">
+        <span class="score-label">Losses</span>
+        <span class="score-value" id="score-l">0</span>
+      </div>
+    </div>
+
+    <p class="status" id="status">Your turn</p>
+
+    <div class="board" id="board">
+      <div class="cell" data-i="0"></div>
+      <div class="cell" data-i="1"></div>
+      <div class="cell" data-i="2"></div>
+      <div class="cell" data-i="3"></div>
+      <div class="cell" data-i="4"></div>
+      <div class="cell" data-i="5"></div>
+      <div class="cell" data-i="6"></div>
+      <div class="cell" data-i="7"></div>
+      <div class="cell" data-i="8"></div>
+    </div>
+
+    <button class="new-game-btn" id="new-game">New game</button>
+
+  </div>
+
+  <script>
+    const WINS = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+    let board, gameOver, playerTurn;
+    let scores = { w: 0, d: 0, l: 0 };
+
+    const cells    = document.querySelectorAll('.cell');
+    const statusEl = document.getElementById('status');
+    const newGameBtn = document.getElementById('new-game');
+
+    function newGame() {
+      board      = Array(9).fill(null);
+      gameOver   = false;
+      playerTurn = true;
+      cells.forEach(c => {
+        c.textContent = '';
+        c.className   = 'cell';
+      });
+      setStatus('Your turn');
+    }
+
+    function setStatus(msg) {
+      statusEl.textContent = msg;
+    }
+
+    function checkWinner(b, mark) {
+      return WINS.find(line => line.every(i => b[i] === mark)) || null;
+    }
+
+    function isDraw(b) {
+      return b.every(v => v !== null);
+    }
+
+    function highlightWin(line) {
+      line.forEach(i => cells[i].classList.add('win-cell'));
+    }
+
+    function playerMove(i) {
+      if (!playerTurn || gameOver || board[i]) return;
+      board[i] = 'X';
+      render();
+
+      const win = checkWinner(board, 'X');
+      if (win) { highlightWin(win); setStatus('You win!'); scores.w++; updateScore(); gameOver = true; return; }
+      if (isDraw(board)) { setStatus("It's a draw!"); scores.d++; updateScore(); gameOver = true; return; }
+
+      playerTurn = false;
+      setStatus('AI is thinking…');
+      setTimeout(aiMove, 350);
+    }
+
+    function aiMove() {
+      const move = getBestMove(board);
+      board[move] = 'O';
+      render();
+
+      const win = checkWinner(board, 'O');
+      if (win) { highlightWin(win); setStatus('AI wins!'); scores.l++; updateScore(); gameOver = true; return; }
+      if (isDraw(board)) { setStatus("It's a draw!"); scores.d++; updateScore(); gameOver = true; return; }
+
+      playerTurn = true;
+      setStatus('Your turn');
+    }
+
+    function getBestMove(b) {
+      // Always take the win
+      for (const line of WINS) {
+        const [a, bI, c] = line;
+        if (b[a] === 'O' && b[bI] === 'O' && b[c] === null) return c;
+        if (b[a] === 'O' && b[c] === 'O' && b[bI] === null) return bI;
+        if (b[bI] === 'O' && b[c] === 'O' && b[a] === null) return a;
+      }
+      // Always block the player's win
+      for (const line of WINS) {
+        const [a, bI, c] = line;
+        if (b[a] === 'X' && b[bI] === 'X' && b[c] === null) return c;
+        if (b[a] === 'X' && b[c] === 'X' && b[bI] === null) return bI;
+        if (b[bI] === 'X' && b[c] === 'X' && b[a] === null) return a;
+      }
+      // 70% of the time play smart (center → corners → edges)
+      // 30% play random — keeps it beatable
+      if (Math.random() < 0.7) {
+        const preferred = [4, 0, 2, 6, 8, 1, 3, 5, 7];
+        for (const i of preferred) {
+          if (b[i] === null) return i;
+        }
+      }
+      const empty = b.map((v, i) => v === null ? i : -1).filter(i => i !== -1);
+      return empty[Math.floor(Math.random() * empty.length)];
+    }
+
+    function render() {
+      board.forEach((val, i) => {
+        const c = cells[i];
+        if (val === 'X') { c.textContent = 'X'; c.classList.add('x', 'taken'); }
+        if (val === 'O') { c.textContent = 'O'; c.classList.add('o', 'taken'); }
+      });
+    }
+
+    function updateScore() {
+      document.getElementById('score-w').textContent = scores.w;
+      document.getElementById('score-d').textContent = scores.d;
+      document.getElementById('score-l').textContent = scores.l;
+    }
+
+    cells.forEach(c => c.addEventListener('click', () => playerMove(+c.dataset.i)));
+    newGameBtn.addEventListener('click', newGame);
+
+    newGame();
+  </script>
+
+</body>
+</html>
