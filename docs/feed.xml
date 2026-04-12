@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Glenn Hurley</title>
+    <link>https://glennhurley.com/log</link>
+    <description>A running log of short thoughts from Glenn Hurley.</description>
+    <language>en-us</language>
+    <atom:link href="https://glennhurley.com/feed.xml" rel="self" type="application/rss+xml" />
+
+    <item>
+      <title>Time to work on some marketing materials.</title>
+      <link>https://glennhurley.com/log#2026-04-11e</link>
+      <guid>https://glennhurley.com/log#2026-04-11e</guid>
+      <pubDate>Sat, 11 Apr 2026 23:10:00 -0400</pubDate>
+      <description><![CDATA[Time to work on some marketing materials.]]></description>
+    </item>
+
+    <item>
+      <title>Got the gallery and tic-tac-toe created tonight while having to drop pong because of mobile.</title>
+      <link>https://glennhurley.com/log#2026-04-11d</link>
+      <guid>https://glennhurley.com/log#2026-04-11d</guid>
+      <pubDate>Sat, 11 Apr 2026 21:31:00 -0400</pubDate>
+      <description><![CDATA[Got the <a href="https://glennhurley.com/gallery">gallery</a> and <a href="https://glennhurley.com/tictactoe">tic-tac-toe</a> created tonight while having to drop pong because of mobile.]]></description>
+    </item>
+
+    <item>
+      <title>My daughter is now showing at glennhurley.com/gallery.</title>
+      <link>https://glennhurley.com/log#2026-04-11c</link>
+      <guid>https://glennhurley.com/log#2026-04-11c</guid>
+      <pubDate>Sat, 11 Apr 2026 20:10:00 -0400</pubDate>
+      <description><![CDATA[My daughter is now showing at <a href="https://glennhurley.com/gallery">glennhurley.com/gallery</a>. She prefers to remain anonymous, so she goes by Artist A. The debut piece is called &ldquo;The Masterpiece.&rdquo; I have no notes.]]></description>
+    </item>
+
+    <item>
+      <title>Talked to my terminal and an AI agent wrote this post for me.</title>
+      <link>https://glennhurley.com/log#2026-04-11b</link>
+      <guid>https://glennhurley.com/log#2026-04-11b</guid>
+      <pubDate>Sat, 11 Apr 2026 01:37:00 -0400</pubDate>
+      <description><![CDATA[Talked to my terminal and an AI agent wrote this post for me. It formatted it, added the timestamp, and committed it to GitHub. All I did was talk. Not sure if that&rsquo;s impressive or lazy. Probably both.]]></description>
+    </item>
+
+    <item>
+      <title>Starting a log.</title>
+      <link>https://glennhurley.com/log#2026-04-10</link>
+      <guid>https://glennhurley.com/log#2026-04-10</guid>
+      <pubDate>Fri, 10 Apr 2026 22:00:00 -0400</pubDate>
+      <description><![CDATA[Starting a log. Somewhere between a blog and a Twitter feed &mdash; short thoughts, no titles, just a running stream.]]></description>
+    </item>
+
+  </channel>
+</rss>
