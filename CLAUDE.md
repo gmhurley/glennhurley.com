@@ -43,6 +43,34 @@ Use today's date. Default location is **Winston-Salem, NC** unless the user spec
 - Keep post text as the user wrote it — don't rewrite or polish it
 - After adding the entry, ask if the user wants to commit and push
 
+## Adding a gallery piece
+
+When the user says "add a piece", "add artwork", or similar, insert a new `<figure>` at the top of the grid in `docs/gallery/index.html`, directly above the `<!-- Add new pieces above this line -->` comment.
+
+Images go in `docs/gallery/img/`. The user will provide the filename.
+
+### Entry format
+
+```html
+<figure class="artwork">
+  <div class="artwork-frame">
+    <img src="img/filename.jpg" alt="Brief description of the piece" loading="lazy" />
+  </div>
+  <figcaption>
+    <span class="artwork-title">Title</span>
+    <span class="artwork-date">2026</span>
+  </figcaption>
+</figure>
+```
+
+### Rules
+- Entries go **newest first** — insert above all existing entries
+- The artist's pseudonym is **Artist A** — never publish her real name
+- Title and date are optional — omit or leave empty if the piece is untitled
+- Use today's year for the date unless the user specifies otherwise
+- Keep any title exactly as the user provides it — don't rewrite or polish it
+- After adding the entry, ask if the user wants to commit and push
+
 ## Data dump folder
 
 `datadump/` is a local-only scratch folder for dropping in screenshots, images, reference files, or any content needed during a session. Its contents are gitignored and will never be committed.
@@ -59,9 +87,13 @@ docs/
   index.html      — homepage
   log/
     index.html    — the log feed
+  gallery/
+    index.html    — Artist A's gallery
+    img/          — artwork image files
   css/
     styles.css    — homepage styles
     log.css       — log page styles
+    gallery.css   — gallery styles
   og.png          — open graph image
   favicon.ico
   robots.txt

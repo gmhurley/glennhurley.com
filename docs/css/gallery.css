@@ -1,0 +1,134 @@
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #faf8f5;
+  color: #222;
+  line-height: 1.6;
+}
+
+.gallery-container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 5rem;
+}
+
+/* Header */
+.back-link {
+  margin-bottom: 2rem;
+}
+.back-link a {
+  text-decoration: none;
+  color: #1da1f2;
+  font-size: 0.9rem;
+}
+.back-link a:hover {
+  text-decoration: underline;
+}
+
+.gallery-header {
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #e8e4de;
+}
+
+.gallery-header h1 {
+  font-size: 2.4rem;
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.gallery-tagline {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #888;
+}
+
+/* Grid */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 2.5rem;
+}
+
+/* Individual piece */
+.artwork {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.artwork-frame {
+  background: #fff;
+  border-radius: 4px;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    0 4px 16px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  box-sizing: border-box;
+  transition: box-shadow 0.2s ease;
+}
+
+.artwork-frame:hover {
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.10),
+    0 8px 28px rgba(0, 0, 0, 0.10);
+}
+
+.artwork-frame img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+  border-radius: 2px;
+}
+
+figcaption {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.artwork-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.artwork-date {
+  font-size: 0.8rem;
+  color: #aaa;
+  white-space: nowrap;
+}
+
+/* Footer */
+.gallery-footer {
+  margin-top: 5rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e8e4de;
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
+.gallery-footer a {
+  color: #aaa;
+  text-decoration: none;
+}
+
+.gallery-footer a:hover {
+  text-decoration: underline;
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .gallery-grid {
+    grid-template-columns: 1fr;
+  }
+}
