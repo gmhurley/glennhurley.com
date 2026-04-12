@@ -36,6 +36,7 @@ Use today's date. Default location is **Winston-Salem, NC** unless the user spec
 ```
 
 ### Rules
+- When the user says "post to Twitter", "tweet this", or similar, treat it as a request to add a log entry — the log is a Twitter clone
 - Always ask the user for the current time before adding a post
 - Entries go **newest first** — insert above all existing entries
 - `id` on the article is `YYYY-MM-DD` (used for shareable anchor links)
