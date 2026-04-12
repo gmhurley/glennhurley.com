@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <title>Pong</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #111;
+      color: #fff;
+      font-family: system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    canvas { display: block; }
+
+    /* ── Screens ── */
+    .screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      background: rgba(17, 17, 17, 0.96);
+    }
+    .screen.hidden { display: none; }
+
+    .screen h1 {
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.25rem;
+    }
+    .screen h2 {
+      font-size: clamp(1.5rem, 5vw, 2.5rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.25rem;
+    }
+    .subtitle {
+      color: rgba(255,255,255,0.4);
+      font-size: clamp(0.8rem, 2.5vw, 0.95rem);
+      margin-bottom: 2rem;
+    }
+
+    /* Leaderboard */
+    .leaderboard {
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 2rem;
+    }
+    .lb-header {
+      display: grid;
+      grid-template-columns: 2rem 1fr auto auto;
+      gap: 0.5rem;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.3);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .lb-row {
+      display: grid;
+      grid-template-columns: 2rem 1fr auto auto;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      align-items: center;
+    }
+    .lb-row:last-child { border-bottom: none; }
+    .lb-rank { color: rgba(255,255,255,0.3); font-size: 0.8em; }
+    .lb-name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lb-score { font-weight: 700; color: #1da1f2; text-align: right; }
+    .lb-date { color: rgba(255,255,255,0.3); font-size: 0.75em; text-align: right; white-space: nowrap; }
+    .lb-empty { text-align: center; padding: 1.5rem; color: rgba(255,255,255,0.3); font-size: 0.9rem; }
+    .lb-loading { text-align: center; padding: 1.5rem; color: rgba(255,255,255,0.3); font-size: 0.9rem; }
+
+    .prompt {
+      font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+      color: rgba(255,255,255,0.35);
+    }
+
+    /* Final score */
+    .final-score {
+      font-size: clamp(3rem, 12vw, 6rem);
+      font-weight: 700;
+      color: #1da1f2;
+      line-height: 1;
+      margin-bottom: 0.25rem;
+    }
+    .final-label {
+      color: rgba(255,255,255,0.4);
+      font-size: 0.85rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Name form */
+    .name-form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      width: 100%;
+      max-width: 300px;
+      margin-bottom: 1.25rem;
+    }
+    .name-form input {
+      width: 100%;
+      padding: 0.65rem 1rem;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      color: #fff;
+      font-size: 1rem;
+      font-family: inherit;
+      text-align: center;
+      outline: none;
+    }
+    .name-form input:focus {
+      border-color: #1da1f2;
+    }
+    .name-form input::placeholder { color: rgba(255,255,255,0.25); }
+
+    .btn {
+      width: 100%;
+      padding: 0.65rem 1rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: #1da1f2; color: #fff; }
+    .btn-ghost {
+      background: transparent;
+      color: rgba(255,255,255,0.35);
+      font-size: 0.85rem;
+      font-weight: 400;
+    }
+
+    /* ── HUD (shown while playing) ── */
+    #hud {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.85rem 1.25rem;
+      pointer-events: none;
+    }
+    #hud.hidden { display: none; }
+
+    #back { display: none; }
+
+    #hud-timer {
+      font-size: clamp(1rem, 3vw, 1.3rem);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: rgba(255,255,255,0.7);
+    }
+    #hud-timer.urgent { color: #e05; }
+
+    #hud-controls {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.2);
+      text-align: right;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="pong"></canvas>
+
+  <!-- HUD: shown while playing -->
+  <div id="hud" class="hidden">
+    <a href="/" id="back">&larr; home</a>
+    <div id="hud-timer">3:00</div>
+    <div id="hud-controls">W / S or arrows<br>Touch to control</div>
+  </div>
+
+  <!-- Start screen: leaderboard + prompt -->
+  <div id="screen-start" class="screen">
+    <h1>Pong</h1>
+    <p class="subtitle">60 seconds. Score as many as you can.</p>
+
+    <div class="leaderboard">
+      <div class="lb-header">
+        <span></span>
+        <span>Name</span>
+        <span>Score</span>
+        <span>Date</span>
+      </div>
+      <div id="lb-body">
+        <div class="lb-loading">Loading leaderboard&hellip;</div>
+      </div>
+    </div>
+
+    <p class="prompt">Press any key or tap to start</p>
+  </div>
+
+  <!-- Game over screen: name entry -->
+  <div id="screen-gameover" class="screen hidden">
+    <h2>Time&rsquo;s up!</h2>
+    <div class="final-score" id="final-score">0</div>
+    <p class="final-label">points scored</p>
+
+    <form class="name-form" id="name-form">
+      <input
+        type="text"
+        id="name-input"
+        placeholder="Enter your name"
+        maxlength="20"
+        autocomplete="off"
+        autocorrect="off"
+        spellcheck="false"
+      />
+      <button type="submit" class="btn btn-primary" id="submit-btn">Add to leaderboard</button>
+    </form>
+    <button class="btn btn-ghost" id="skip-btn">Skip &rarr; play again</button>
+  </div>
+
+  <script>
+    // ── Dreamlo ──────────────────────────────────────────────────
+    const PRIVATE_CODE = 'Bks8DhRiZk6Ad0btWv8OeQJ6JmvCSPvEKmMWet2sPQVQ';
+    const PUBLIC_CODE  = '69dae9088f40bc2f6048b924';
+
+    async function fetchScores() {
+      try {
+        const res = await fetch(`https://dreamlo.com/lb/${PUBLIC_CODE}/json/10`);
+        const data = await res.json();
+        let entries = data?.dreamlo?.leaderboard?.entry ?? [];
+        if (!Array.isArray(entries)) entries = [entries];
+        return entries;
+      } catch {
+        return null;
+      }
+    }
+
+    async function postScore(name, score) {
+      const safe = encodeURIComponent(name.trim() || 'Anonymous');
+      await fetch(`https://dreamlo.com/lb/${PRIVATE_CODE}/add/${safe}/${score}`);
+    }
+
+    function formatDate(str) {
+      if (!str) return '';
+      const d = new Date(str.replace(' ', 'T') + 'Z');
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function renderLeaderboard(entries) {
+      const body = document.getElementById('lb-body');
+      if (!entries || entries.length === 0) {
+        body.innerHTML = '<div class="lb-empty">No scores yet — be the first!</div>';
+        return;
+      }
+      body.innerHTML = entries.map((e, i) => `
+        <div class="lb-row">
+          <span class="lb-rank">${i + 1}</span>
+          <span class="lb-name">${escHtml(e.name)}</span>
+          <span class="lb-score">${e.score}</span>
+          <span class="lb-date">${formatDate(e.date)}</span>
+        </div>
+      `).join('');
+    }
+
+    function escHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // ── Canvas / game ─────────────────────────────────────────────
+    const canvas = document.getElementById('pong');
+    const ctx    = canvas.getContext('2d');
+
+    const GAME_DURATION = 60; // seconds
+
+    let W, H, PW, PH, BR, PSPEED, MARGIN;
+    let playerY, aiY, ballX, ballY, ballVX, ballVY, aiTargetY;
+    let playerScore = 0;
+    let timeLeft    = GAME_DURATION;
+    let lastTick    = null;
+    let state       = 'start'; // start | playing | gameover
+    let keys        = {};
+    let touchY      = null;
+
+    const screenStart    = document.getElementById('screen-start');
+    const screenGameover = document.getElementById('screen-gameover');
+    const hud            = document.getElementById('hud');
+    const hudTimer       = document.getElementById('hud-timer');
+    const finalScoreEl   = document.getElementById('final-score');
+    const nameForm       = document.getElementById('name-form');
+    const nameInput      = document.getElementById('name-input');
+    const submitBtn      = document.getElementById('submit-btn');
+    const skipBtn        = document.getElementById('skip-btn');
+
+    function showScreen(name) {
+      screenStart.classList.toggle('hidden',    name !== 'start');
+      screenGameover.classList.toggle('hidden', name !== 'gameover');
+      hud.classList.toggle('hidden',            name !== 'playing');
+    }
+
+    function resize() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+      PW     = Math.max(8, W * 0.018);
+      PH     = Math.max(50, H * 0.14);
+      BR     = Math.max(5, W * 0.011);
+      PSPEED = H * 0.011;
+      MARGIN = PW * 2.5;
+    }
+
+    function ballSpeed() { return W * 0.01; } // fast from the start
+
+    function resetBall(dir) {
+      ballX = W / 2;
+      ballY = H / 2;
+      const angle = (Math.random() * 0.5 - 0.25);
+      const d     = dir ?? (Math.random() < 0.5 ? 1 : -1);
+      const spd   = ballSpeed();
+      ballVX = Math.cos(angle) * spd * d;
+      ballVY = Math.sin(angle) * spd;
+      aiTargetY = H / 2;
+    }
+
+    function startGame() {
+      playerScore = 0;
+      timeLeft    = GAME_DURATION;
+      lastTick    = null;
+      playerY = H / 2 - PH / 2;
+      aiY     = H / 2 - PH / 2;
+      resetBall();
+      state = 'playing';
+      showScreen('playing');
+      updateHudTimer();
+    }
+
+    function endGame() {
+      state = 'gameover';
+      showScreen('gameover');
+      finalScoreEl.textContent = playerScore;
+      nameInput.value = '';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Add to leaderboard';
+      setTimeout(() => nameInput.focus(), 100);
+    }
+
+    function updateHudTimer() {
+      const m = Math.floor(timeLeft / 60);
+      const s = Math.floor(timeLeft % 60);
+      hudTimer.textContent = `${m}:${String(s).padStart(2, '0')}`;
+      hudTimer.classList.toggle('urgent', timeLeft <= 30);
+    }
+
+    function clampY(y) { return Math.max(0, Math.min(H - PH, y)); }
+
+    function update(ts) {
+      if (state !== 'playing') return;
+
+      // Timer
+      if (lastTick !== null) {
+        const dt = Math.min((ts - lastTick) / 1000, 0.1); // cap delta to avoid spiral
+        timeLeft -= dt;
+        if (timeLeft <= 0) { timeLeft = 0; updateHudTimer(); endGame(); return; }
+        updateHudTimer();
+      }
+      lastTick = ts;
+
+      // Player paddle
+      if (touchY !== null) {
+        playerY += (touchY - PH / 2 - playerY) * 0.25;
+      } else {
+        if (keys['w'] || keys['W'] || keys['ArrowUp'])   playerY -= PSPEED;
+        if (keys['s'] || keys['S'] || keys['ArrowDown']) playerY += PSPEED;
+      }
+      playerY = clampY(playerY);
+
+      // AI paddle — imperfect tracking
+      if (Math.random() < 0.02) aiTargetY = ballY + (Math.random() - 0.5) * PH * 0.6;
+      else aiTargetY += (ballY - aiTargetY) * 0.07;
+      const aiCenter = aiY + PH / 2;
+      aiY += Math.sign(aiTargetY - aiCenter) * Math.min(Math.abs(aiTargetY - aiCenter), PSPEED * 0.8);
+      aiY  = clampY(aiY);
+
+      // Ball movement
+      ballX += ballVX;
+      ballY += ballVY;
+
+      // Walls
+      if (ballY - BR < 0) { ballY = BR;     ballVY *= -1; }
+      if (ballY + BR > H) { ballY = H - BR; ballVY *= -1; }
+
+      const maxSpd = W * 0.026;
+
+      // Player paddle hit (left side)
+      if (ballVX < 0 &&
+          ballX - BR < MARGIN + PW &&
+          ballY + BR > playerY && ballY - BR < playerY + PH) {
+        ballX = MARGIN + PW + BR;
+        const hit   = (ballY - (playerY + PH / 2)) / (PH / 2);
+        const spd   = Math.min(Math.hypot(ballVX, ballVY) * 1.06, maxSpd);
+        const angle = hit * (Math.PI / 3.5);
+        ballVX =  Math.cos(angle) * spd;
+        ballVY =  Math.sin(angle) * spd;
+      }
+
+      // AI paddle hit (right side)
+      if (ballVX > 0 &&
+          ballX + BR > W - MARGIN - PW &&
+          ballY + BR > aiY && ballY - BR < aiY + PH) {
+        ballX = W - MARGIN - PW - BR;
+        const hit   = (ballY - (aiY + PH / 2)) / (PH / 2);
+        const spd   = Math.min(Math.hypot(ballVX, ballVY) * 1.06, maxSpd);
+        const angle = hit * (Math.PI / 3.5);
+        ballVX = -Math.cos(angle) * spd;
+        ballVY =  Math.sin(angle) * spd;
+      }
+
+      // Scoring
+      if (ballX + BR < 0) {
+        // AI scores — just reset, no point for AI
+        resetBall(1);
+      } else if (ballX - BR > W) {
+        playerScore++;
+        resetBall(-1);
+      }
+    }
+
+    function draw() {
+      ctx.fillStyle = '#111';
+      ctx.fillRect(0, 0, W, H);
+
+      // Center line
+      ctx.save();
+      ctx.setLineDash([H * 0.025, H * 0.018]);
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(W / 2, 0);
+      ctx.lineTo(W / 2, H);
+      ctx.stroke();
+      ctx.restore();
+
+      // Score (during play — shown on canvas)
+      if (state === 'playing') {
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.font = `700 ${Math.round(H * 0.09)}px system-ui`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText(playerScore, W / 2, H * 0.06);
+      }
+
+      // Paddles
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.roundRect(MARGIN, playerY, PW, PH, PW / 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.roundRect(W - MARGIN - PW, aiY, PW, PH, PW / 2);
+      ctx.fill();
+
+      // Ball
+      ctx.beginPath();
+      ctx.arc(ballX, ballY, BR, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function loop(ts) {
+      update(ts);
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    // ── Input ─────────────────────────────────────────────────────
+    window.addEventListener('keydown', e => {
+      keys[e.key] = true;
+      if (state === 'start') startGame();
+    });
+    window.addEventListener('keyup', e => { keys[e.key] = false; });
+
+    canvas.addEventListener('touchstart', e => {
+      e.preventDefault();
+      touchY = e.touches[0].clientY;
+      if (state === 'start') startGame();
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', e => {
+      e.preventDefault();
+      touchY = e.touches[0].clientY;
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', () => { touchY = null; });
+
+    // ── Name form ─────────────────────────────────────────────────
+    nameForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const name = nameInput.value.trim() || 'Anonymous';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving…';
+      await postScore(name, playerScore);
+      await goToStart();
+    });
+
+    skipBtn.addEventListener('click', goToStart);
+
+    async function goToStart() {
+      showScreen('start');
+      document.getElementById('lb-body').innerHTML = '<div class="lb-loading">Loading&hellip;</div>';
+      state = 'start';
+      const entries = await fetchScores();
+      renderLeaderboard(entries);
+    }
+
+    // ── Init ──────────────────────────────────────────────────────
+    window.addEventListener('resize', () => {
+      resize();
+      if (state !== 'playing') {
+        playerY = H / 2 - PH / 2;
+        aiY     = H / 2 - PH / 2;
+        ballX   = W / 2;
+        ballY   = H / 2;
+      }
+    });
+
+    resize();
+    resetBall();
+    playerY = H / 2 - PH / 2;
+    aiY     = H / 2 - PH / 2;
+    showScreen('start');
+
+    // Load leaderboard on start
+    fetchScores().then(renderLeaderboard);
+
+    requestAnimationFrame(loop);
+  </script>
+
+</body>
+</html>
