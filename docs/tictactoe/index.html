@@ -5,11 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tic-Tac-Toe &mdash; Glenn Hurley</title>
   <link rel="icon" href="/favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: 'Press Start 2P', monospace;
       background: #f8f9fb;
       color: #222;
     }
@@ -24,7 +26,7 @@
     .site-header a {
       text-decoration: none;
       color: #7c3aed;
-      font-size: 0.85rem;
+      font-size: 0.5rem;
     }
     .site-header a:hover { text-decoration: underline; }
 
@@ -38,10 +40,11 @@
     }
 
     .game-title {
-      font-size: 1.8rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: #222;
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(1.2rem, 6vw, 2.4rem);
+      color: #7c3aed;
+      text-shadow: 3px 3px 0 #222;
+      letter-spacing: 0.02em;
     }
 
     /* ── Mode toggle ── */
@@ -67,8 +70,8 @@
       transition: background 0.15s, color 0.15s;
     }
     .mode-btn + .mode-btn { border-left: 2px solid #e1e8ed; }
-    .mode-btn-title { font-size: 0.85rem; font-weight: 700; }
-    .mode-btn-sub   { font-size: 0.7rem; font-weight: 400; }
+    .mode-btn-title { font-size: 0.5rem; font-weight: 700; }
+    .mode-btn-sub   { font-size: 0.38rem; font-weight: 400; }
     .mode-btn.active { background: #7c3aed; color: #fff; }
     .mode-btn:not(.active):hover { background: #f0f4f8; color: #657786; }
 
@@ -81,14 +84,13 @@
       gap: 0.2rem;
     }
     .score-label {
-      font-size: 0.65rem;
+      font-size: 0.4rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: #aaa;
     }
     .score-value {
-      font-size: 1.6rem;
-      font-weight: 700;
+      font-size: 1.2rem;
       font-variant-numeric: tabular-nums;
       color: #222;
     }
@@ -97,15 +99,14 @@
 
     /* ── Session info ── */
     .session-info {
-      font-size: 0.9rem;
+      font-size: 0.45rem;
       color: #657786;
-      font-weight: 600;
       min-height: 1.4rem;
     }
 
     /* ── Status ── */
     .status {
-      font-size: 1rem;
+      font-size: 0.55rem;
       color: #657786;
       min-height: 1.5rem;
       text-align: center;
@@ -165,18 +166,17 @@
     .board-overlay[hidden] { display: none; }
 
     .overlay-label {
-      font-size: 0.75rem;
+      font-size: 0.45rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: #aaa;
-      font-weight: 700;
     }
     .overlay-name-input {
       padding: 0.5rem 0.75rem;
       border: 2px solid #e1e8ed;
       border-radius: 6px;
       font-family: inherit;
-      font-size: 1rem;
+      font-size: 0.55rem;
       text-align: center;
       width: 200px;
     }
@@ -184,26 +184,24 @@
 
     .result-score {
       font-size: 2rem;
-      font-weight: 700;
       color: #7c3aed;
       line-height: 1;
     }
     .result-label {
-      font-size: 0.85rem;
+      font-size: 0.45rem;
       color: #657786;
     }
     .result-btns { display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: center; }
 
     /* ── Buttons ── */
     .btn {
-      padding: 0.6rem 1.75rem;
+      padding: 0.6rem 1.25rem;
       background: #7c3aed;
       color: #fff;
       border: none;
       border-radius: 6px;
-      font-size: 0.9rem;
+      font-size: 0.55rem;
       font-family: inherit;
-      font-weight: 600;
       cursor: pointer;
       transition: opacity 0.15s;
     }
@@ -218,28 +216,27 @@
     /* ── Leaderboard table ── */
     .leaderboard { width: 100%; max-width: 380px; }
     .leaderboard h2 {
-      font-size: 0.75rem;
-      font-weight: 700;
+      font-size: 0.45rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: #aaa;
       margin-bottom: 0.75rem;
       text-align: center;
     }
-    .lb-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .lb-table { width: 100%; border-collapse: collapse; font-size: 0.45rem; }
     .lb-table th {
       text-align: left;
-      font-size: 0.65rem;
+      font-size: 0.4rem;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.06em;
       color: #aaa;
       padding: 0.4rem 0.5rem;
       border-bottom: 2px solid #e1e8ed;
     }
     .lb-table td { padding: 0.5rem 0.5rem; border-bottom: 1px solid #f0f4f8; }
     .lb-table tr:last-child td { border-bottom: none; }
-    .lb-table .rank     { color: #aaa; font-size: 0.8rem; width: 1.5rem; }
-    .lb-table .wins-val { font-weight: 700; color: #7c3aed; }
+    .lb-table .rank     { color: #aaa; font-size: 0.4rem; width: 1.5rem; }
+    .lb-table .wins-val { color: #7c3aed; }
     .lb-empty { text-align: center; color: #aaa; font-size: 0.9rem; padding: 1.5rem 0; }
 
     /* Preserves layout space while hiding visually */
@@ -546,24 +543,67 @@
       setStatus('Your turn');
     }
 
+    function winningMove(b, mark) {
+      for (const line of WINS) {
+        const vals = line.map(i => b[i]);
+        if (vals.filter(v => v === mark).length === 2 && vals.includes(null))
+          return line[vals.indexOf(null)];
+      }
+      return -1;
+    }
+
+    function forkMoves(b, mark) {
+      const empty = b.map((v,i) => v===null?i:-1).filter(i=>i!==-1);
+      return empty.filter(i => {
+        const next = [...b]; next[i] = mark;
+        const threats = new Set();
+        for (const line of WINS) {
+          const vals = line.map(j => next[j]);
+          const ni = vals.indexOf(null);
+          if (ni !== -1 && vals.filter(v => v===mark).length===2)
+            threats.add(line[ni]);
+        }
+        return threats.size >= 2;
+      });
+    }
+
     function getBestMove(b) {
-      for (const line of WINS) {
-        const [a, bI, c] = line;
-        if (b[a]==='O' && b[bI]==='O' && b[c]===null) return c;
-        if (b[a]==='O' && b[c]==='O' && b[bI]===null) return bI;
-        if (b[bI]==='O' && b[c]==='O' && b[a]===null) return a;
+      const empty = b.map((v,i) => v===null?i:-1).filter(i=>i!==-1);
+
+      // 1. Win
+      let m = winningMove(b, 'O'); if (m !== -1) return m;
+      // 2. Block win
+      m = winningMove(b, 'X'); if (m !== -1) return m;
+      // 3. Create our own fork
+      const oForks = forkMoves(b, 'O'); if (oForks.length) return oForks[0];
+      // 4. Opposite-corner trap: if X has two opposite corners and we have center,
+      //    we MUST play an edge or X forks next turn
+      if (b[4]==='O') {
+        const oppPairs = [[0,8],[2,6]];
+        for (const [a,c] of oppPairs) {
+          if (b[a]==='X' && b[c]==='X') {
+            const edges = [1,3,5,7].filter(i => b[i]===null);
+            if (edges.length) return edges[Math.floor(Math.random()*edges.length)];
+          }
+        }
       }
-      for (const line of WINS) {
-        const [a, bI, c] = line;
-        if (b[a]==='X' && b[bI]==='X' && b[c]===null) return c;
-        if (b[a]==='X' && b[c]==='X' && b[bI]===null) return bI;
-        if (b[bI]==='X' && b[c]==='X' && b[a]===null) return a;
+      // 5. Block any remaining fork
+      const xForks = forkMoves(b, 'X'); if (xForks.length) return xForks[0];
+      // 6. Center
+      if (b[4] === null) return 4;
+      // 7. Opposite corner from X
+      const oppCorners = [[0,8],[2,6],[6,2],[8,0]];
+      for (const [a,c] of oppCorners) {
+        if (b[a]==='X' && b[c]===null) return c;
       }
-      if (Math.random() < 0.7) {
-        for (const i of [4,0,2,6,8,1,3,5,7]) { if (b[i]===null) return i; }
-      }
-      const empty = b.map((v,i) => v===null ? i : -1).filter(i => i!==-1);
-      return empty[Math.floor(Math.random() * empty.length)];
+      // 8. Any corner (slight randomness keeps it beatable)
+      const corners = [0,2,6,8].filter(i => b[i]===null);
+      if (corners.length && Math.random() < 0.75)
+        return corners[Math.floor(Math.random()*corners.length)];
+      // 9. Any edge
+      const edges = [1,3,5,7].filter(i => b[i]===null);
+      if (edges.length) return edges[Math.floor(Math.random()*edges.length)];
+      return empty[Math.floor(Math.random()*empty.length)];
     }
 
     function render() {
