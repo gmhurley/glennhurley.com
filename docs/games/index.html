@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Games | Glenn Hurley</title>
+  <meta name="description" content="Games built by Glenn Hurley." />
+  <link rel="canonical" href="https://glennhurley.com/games" />
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <style>
+    .games {
+      margin-top: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .game-card {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      padding: 1rem 1.25rem;
+      border: 1px solid #e1e8ed;
+      border-radius: 8px;
+      text-decoration: none;
+      color: inherit;
+      background: #fff;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .game-card:hover {
+      border-color: #1da1f2;
+      box-shadow: 0 1px 6px rgba(29,161,242,0.12);
+    }
+    .game-card-title {
+      font-weight: 600;
+      font-size: 1rem;
+      color: #1da1f2;
+    }
+    .game-card-desc {
+      font-size: 0.88rem;
+      color: #657786;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <div class="intro">
+      <h1>Games</h1>
+      <p class="tagline">Small games built for fun.</p>
+    </div>
+
+    <div class="games">
+      <a class="game-card" href="/tictactoe">
+        <span class="game-card-title">Tic-Tac-Toe</span>
+        <p class="game-card-desc">You vs. the machine. Leaderboard included.</p>
+      </a>
+      <a class="game-card" href="/hangman">
+        <span class="game-card-title">Hangman</span>
+        <p class="game-card-desc">283 kid-friendly words. 9 chances. Paper &amp; sketch style.</p>
+      </a>
+    </div>
+
+    <p class="log-note" style="margin-top:2rem;">
+      &larr; <a href="/">glennhurley.com</a>
+    </p>
+
+    <footer>&copy; <span id="year"></span> Glenn Hurley</footer>
+  </main>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+  <script data-goatcounter="https://shroomslice.goatcounter.com/count"
+          async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
