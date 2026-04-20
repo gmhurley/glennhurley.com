@@ -8,6 +8,14 @@
     <atom:link href="https://glennhurley.com/feed.xml" rel="self" type="application/rss+xml" />
 
     <item>
+      <title>Added a leaderboard to tic-tac-toe.</title>
+      <link>https://glennhurley.com/log#2026-04-19</link>
+      <guid>https://glennhurley.com/log#2026-04-19</guid>
+      <pubDate>Sun, 19 Apr 2026 21:27:00 -0400</pubDate>
+      <description><![CDATA[Added a leaderboard to <a href="https://glennhurley.com/tictactoe">tic-tac-toe</a>. Enter your name, play 10 rounds, scores get submitted automatically. Also gave it a retro arcade font because obviously.]]></description>
+    </item>
+
+    <item>
       <title>Been heads-down on a new project.</title>
       <link>https://glennhurley.com/log#2026-04-18</link>
       <guid>https://glennhurley.com/log#2026-04-18</guid>
