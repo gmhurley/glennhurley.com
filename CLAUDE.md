@@ -15,9 +15,6 @@ Use today's date. Default location is **Winston-Salem, NC** unless the user spec
   <div class="tweet-avatar">GH</div>
   <div class="tweet-body">
     <div class="tweet-meta">
-      <span class="tweet-name">Glenn Hurley</span>
-      <span class="tweet-handle">@glennhurley</span>
-      <span class="tweet-dot">&middot;</span>
       <time class="tweet-time" datetime="YYYY-MM-DDTHH:MM">H:MM AM/PM &middot; Mon D, YYYY</time>
     </div>
     <p class="tweet-text">Post content here.</p>
