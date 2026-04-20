@@ -19,21 +19,14 @@
       border-bottom: 1px solid #e1e8ed;
       display: flex;
       align-items: center;
-      justify-content: space-between;
       padding: 0.75rem 1.25rem;
     }
     .site-header a {
       text-decoration: none;
-      color: #1da1f2;
+      color: #7c3aed;
       font-size: 0.85rem;
     }
     .site-header a:hover { text-decoration: underline; }
-    .game-title {
-      font-size: 1.8rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: #222;
-    }
 
     /* ── Game area ── */
     .game-area {
@@ -44,11 +37,43 @@
       gap: 1.75rem;
     }
 
-    /* Score */
-    .score {
-      display: flex;
-      gap: 2rem;
+    .game-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #222;
     }
+
+    /* ── Mode toggle ── */
+    .mode-toggle {
+      display: flex;
+      border: 2px solid #e1e8ed;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .mode-btn {
+      padding: 0.6rem 1.5rem;
+      background: none;
+      border: none;
+      font-family: inherit;
+      cursor: pointer;
+      color: #aaa;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.15rem;
+      transition: background 0.15s, color 0.15s;
+    }
+    .mode-btn + .mode-btn { border-left: 2px solid #e1e8ed; }
+    .mode-btn-title { font-size: 0.85rem; font-weight: 700; }
+    .mode-btn-sub   { font-size: 0.7rem; font-weight: 400; }
+    .mode-btn.active { background: #7c3aed; color: #fff; }
+    .mode-btn:not(.active):hover { background: #f0f4f8; color: #657786; }
+
+    /* ── Score ── */
+    .score { display: flex; gap: 2rem; }
     .score-item {
       display: flex;
       flex-direction: column;
@@ -67,10 +92,18 @@
       font-variant-numeric: tabular-nums;
       color: #222;
     }
-    .score-item.wins  .score-value { color: #1da1f2; }
+    .score-item.wins   .score-value { color: #7c3aed; }
     .score-item.losses .score-value { color: #e05; }
 
-    /* Status */
+    /* ── Session info ── */
+    .session-info {
+      font-size: 0.9rem;
+      color: #657786;
+      font-weight: 600;
+      min-height: 1.4rem;
+    }
+
+    /* ── Status ── */
     .status {
       font-size: 1rem;
       color: #657786;
@@ -78,7 +111,14 @@
       text-align: center;
     }
 
-    /* Board */
+    /* ── Board wrapper (always 288×288, never moves) ── */
+    .board-wrapper {
+      position: relative;
+      width: 288px;
+      height: 288px;
+      flex-shrink: 0;
+    }
+
     .board {
       display: grid;
       grid-template-columns: repeat(3, 96px);
@@ -86,9 +126,7 @@
       width: 288px;
       height: 288px;
       overflow: hidden;
-      flex-shrink: 0;
     }
-
     .cell {
       display: flex;
       align-items: center;
@@ -103,22 +141,63 @@
       transition: background 0.1s;
       line-height: 1;
     }
-    .cell:nth-child(3n)   { border-right: none; }
-    .cell:nth-child(n+7)  { border-bottom: none; }
-
-    .cell:not(.taken):hover { background: #f0f4f8; }
+    .cell:nth-child(3n)  { border-right: none; }
+    .cell:nth-child(n+7) { border-bottom: none; }
+    .cell:not(.taken):hover  { background: #f0f4f8; }
     .cell:not(.taken):active { background: #e1e8ed; }
-
-    .cell.x { color: #1da1f2; }
+    .cell.x { color: #7c3aed; }
     .cell.o { color: #e05; }
-
-    .cell.win-cell { background: #eaf6ff; }
+    .cell.win-cell   { background: #eaf6ff; }
     .cell.o.win-cell { background: #fff0f0; }
 
-    /* New game button */
-    .new-game-btn {
+    /* ── Board overlay (name entry & session result) ── */
+    .board-overlay {
+      position: absolute;
+      inset: 0;
+      background: #f8f9fb;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      text-align: center;
+    }
+    .board-overlay[hidden] { display: none; }
+
+    .overlay-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #aaa;
+      font-weight: 700;
+    }
+    .overlay-name-input {
+      padding: 0.5rem 0.75rem;
+      border: 2px solid #e1e8ed;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 1rem;
+      text-align: center;
+      width: 200px;
+    }
+    .overlay-name-input:focus { outline: none; border-color: #7c3aed; }
+
+    .result-score {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #7c3aed;
+      line-height: 1;
+    }
+    .result-label {
+      font-size: 0.85rem;
+      color: #657786;
+    }
+    .result-btns { display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: center; }
+
+    /* ── Buttons ── */
+    .btn {
       padding: 0.6rem 1.75rem;
-      background: #222;
+      background: #7c3aed;
       color: #fff;
       border: none;
       border-radius: 6px;
@@ -128,7 +207,43 @@
       cursor: pointer;
       transition: opacity 0.15s;
     }
-    .new-game-btn:hover { opacity: 0.75; }
+    .btn:hover    { opacity: 0.8; }
+    .btn:disabled { opacity: 0.4; cursor: default; }
+    .btn.secondary {
+      background: none;
+      color: #7c3aed;
+      border: 2px solid #7c3aed;
+    }
+
+    /* ── Leaderboard table ── */
+    .leaderboard { width: 100%; max-width: 380px; }
+    .leaderboard h2 {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #aaa;
+      margin-bottom: 0.75rem;
+      text-align: center;
+    }
+    .lb-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .lb-table th {
+      text-align: left;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #aaa;
+      padding: 0.4rem 0.5rem;
+      border-bottom: 2px solid #e1e8ed;
+    }
+    .lb-table td { padding: 0.5rem 0.5rem; border-bottom: 1px solid #f0f4f8; }
+    .lb-table tr:last-child td { border-bottom: none; }
+    .lb-table .rank     { color: #aaa; font-size: 0.8rem; width: 1.5rem; }
+    .lb-table .wins-val { font-weight: 700; color: #7c3aed; }
+    .lb-empty { text-align: center; color: #aaa; font-size: 0.9rem; padding: 1.5rem 0; }
+
+    /* Preserves layout space while hiding visually */
+    .ghost { visibility: hidden; pointer-events: none; }
   </style>
 </head>
 <body>
@@ -141,7 +256,22 @@
 
     <h1 class="game-title">Tic-Tac-Toe</h1>
 
-    <div class="score">
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="btn-quick">
+        <span class="mode-btn-title">Quick Play</span>
+        <span class="mode-btn-sub">you vs. the machine</span>
+      </button>
+      <button class="mode-btn" id="btn-lb">
+        <span class="mode-btn-title">Leaderboard</span>
+        <span class="mode-btn-sub">10 rounds &middot; glory awaits</span>
+      </button>
+    </div>
+
+    <!-- Always takes space; text set by JS -->
+    <p class="session-info ghost" id="session-info"></p>
+
+    <!-- Always takes space; ghosted when not relevant -->
+    <div class="score" id="score-area">
       <div class="score-item wins">
         <span class="score-label">Wins</span>
         <span class="score-value" id="score-w">0</span>
@@ -156,72 +286,252 @@
       </div>
     </div>
 
+    <!-- Always takes space -->
     <p class="status" id="status">Your turn</p>
 
-    <div class="board" id="board">
-      <div class="cell" data-i="0"></div>
-      <div class="cell" data-i="1"></div>
-      <div class="cell" data-i="2"></div>
-      <div class="cell" data-i="3"></div>
-      <div class="cell" data-i="4"></div>
-      <div class="cell" data-i="5"></div>
-      <div class="cell" data-i="6"></div>
-      <div class="cell" data-i="7"></div>
-      <div class="cell" data-i="8"></div>
+    <!-- Board wrapper is always 288×288 — nothing below it shifts -->
+    <div class="board-wrapper">
+
+      <div class="board" id="board">
+        <div class="cell" data-i="0"></div>
+        <div class="cell" data-i="1"></div>
+        <div class="cell" data-i="2"></div>
+        <div class="cell" data-i="3"></div>
+        <div class="cell" data-i="4"></div>
+        <div class="cell" data-i="5"></div>
+        <div class="cell" data-i="6"></div>
+        <div class="cell" data-i="7"></div>
+        <div class="cell" data-i="8"></div>
+      </div>
+
+      <!-- Name entry overlay (leaderboard mode, no session) -->
+      <div class="board-overlay" id="overlay-name" hidden>
+        <span class="overlay-label">Enter your name</span>
+        <input class="overlay-name-input" type="text" id="player-name" placeholder="Your name" maxlength="20" />
+        <button class="btn" id="start-session-btn">Let&rsquo;s Go</button>
+      </div>
+
+      <!-- Session result overlay (after 10 games) -->
+      <div class="board-overlay" id="overlay-result" hidden>
+        <span class="overlay-label" id="result-name"></span>
+        <span class="result-score" id="result-score"></span>
+        <span class="result-label">out of 10</span>
+        <p class="result-label" id="result-sub"></p>
+        <p class="result-label" id="result-status"></p>
+        <button class="btn secondary" id="new-session-btn">Play Again</button>
+      </div>
+
     </div>
 
-    <button class="new-game-btn" id="new-game">New game</button>
+    <!-- Always takes space; ghosted or disabled as needed -->
+    <button class="btn ghost" id="new-game-btn">New Game</button>
+
+    <!-- Leaderboard table — bottom of page, fine to appear/disappear -->
+    <div class="leaderboard" id="lb-area" hidden>
+      <h2>Leaderboard</h2>
+      <div id="lb-content"><p class="lb-empty">Loading&hellip;</p></div>
+    </div>
 
   </div>
 
   <script>
+    const BIN_ID  = '69e4322daaba88219713ff44';
+    const API_KEY = '$2a$10$cQcCxKnYuizMHw6lPyoN2OWA48GsqNjqN2zE6XrEVP87prvjob5yC';
+    const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+    const TOTAL   = 10;
+
     const WINS = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 
     let board, gameOver, playerTurn;
-    let scores = { w: 0, d: 0, l: 0 };
+    let scores  = { w: 0, d: 0, l: 0 };
+    let mode    = 'quick';
+    let session = null;   // { name, gamesPlayed, wins }
 
-    const cells    = document.querySelectorAll('.cell');
-    const statusEl = document.getElementById('status');
-    const newGameBtn = document.getElementById('new-game');
+    const cells          = document.querySelectorAll('.cell');
+    const statusEl       = document.getElementById('status');
+    const newGameBtn     = document.getElementById('new-game-btn');
+    const scoreArea      = document.getElementById('score-area');
+    const sessionInfoEl  = document.getElementById('session-info');
+    const overlayName    = document.getElementById('overlay-name');
+    const overlayResult  = document.getElementById('overlay-result');
+    const lbArea         = document.getElementById('lb-area');
+    const playerNameEl   = document.getElementById('player-name');
+    const btnQuick       = document.getElementById('btn-quick');
+    const btnLb          = document.getElementById('btn-lb');
+
+    function ghost(el)   { el.classList.add('ghost'); }
+    function unghost(el) { el.classList.remove('ghost'); }
+
+    // ── API ──────────────────────────────────────────────────────────────────
+
+    async function fetchEntries() {
+      const res = await fetch(`${BIN_URL}/latest`, { headers: { 'X-Master-Key': API_KEY } });
+      const data = await res.json();
+      return Array.isArray(data.record) ? data.record : [];
+    }
+
+    async function pushEntry(name, wins) {
+      const entries = await fetchEntries();
+      entries.push({ name, wins, date: new Date().toISOString().slice(0, 10) });
+      entries.sort((a, b) => b.wins - a.wins || a.date.localeCompare(b.date));
+      await fetch(BIN_URL, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY, 'X-Bin-Versioning': 'false' },
+        body: JSON.stringify(entries)
+      });
+      return entries;
+    }
+
+    // ── Leaderboard rendering ─────────────────────────────────────────────────
+
+    function esc(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function renderLeaderboard(entries) {
+      const el  = document.getElementById('lb-content');
+      const top = entries.slice(0, 10);
+      if (!top.length) { el.innerHTML = '<p class="lb-empty">No scores yet.</p>'; return; }
+      let html = '<table class="lb-table"><thead><tr><th>#</th><th>Name</th><th>Wins</th><th>Date</th></tr></thead><tbody>';
+      top.forEach((e, i) => {
+        const d = new Date(e.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        html += `<tr><td class="rank">${i+1}</td><td>${esc(e.name)}</td><td class="wins-val">${e.wins}/${TOTAL}</td><td>${d}</td></tr>`;
+      });
+      html += '</tbody></table>';
+      el.innerHTML = html;
+    }
+
+    async function loadLeaderboard() {
+      document.getElementById('lb-content').innerHTML = '<p class="lb-empty">Loading&hellip;</p>';
+      try { renderLeaderboard(await fetchEntries()); }
+      catch { document.getElementById('lb-content').innerHTML = '<p class="lb-empty">Couldn\'t load scores.</p>'; }
+    }
+
+    // ── Mode switching ────────────────────────────────────────────────────────
+
+    function setMode(m) {
+      mode = m;
+      session = null;
+      scores  = { w: 0, d: 0, l: 0 };
+      btnQuick.classList.toggle('active', m === 'quick');
+      btnLb.classList.toggle('active',    m === 'leaderboard');
+
+      overlayName.hidden   = true;
+      overlayResult.hidden = true;
+
+      if (m === 'quick') {
+        unghost(scoreArea);
+        unghost(statusEl);
+        unghost(newGameBtn);
+        ghost(sessionInfoEl);
+        lbArea.hidden       = true;
+        newGameBtn.disabled = false;
+        newGameBtn.textContent = 'New Game';
+        updateScore();
+        newGame();
+      } else {
+        ghost(scoreArea);
+        ghost(statusEl);
+        ghost(newGameBtn);
+        ghost(sessionInfoEl);
+        overlayName.hidden = false;
+        lbArea.hidden      = false;
+        loadLeaderboard();
+      }
+    }
+
+    // ── Session management ────────────────────────────────────────────────────
+
+    function startSession() {
+      const name = playerNameEl.value.trim();
+      if (!name) { playerNameEl.focus(); return; }
+      session = { name, gamesPlayed: 0, wins: 0 };
+      scores  = { w: 0, d: 0, l: 0 };
+
+      overlayName.hidden   = true;
+      overlayResult.hidden = true;
+      lbArea.hidden        = true;
+      unghost(scoreArea);
+      unghost(statusEl);
+      unghost(newGameBtn);
+      unghost(sessionInfoEl);
+      updateScore();
+      updateSessionInfo();
+      newGame();
+    }
+
+    function updateSessionInfo() {
+      if (!session) return;
+      sessionInfoEl.textContent = `Game ${session.gamesPlayed + 1} of ${TOTAL} · ${session.name}`;
+    }
+
+    function onGameEnd(result) {
+      session.gamesPlayed++;
+      if (result === 'win') session.wins++;
+      newGameBtn.disabled = false;
+      if (session.gamesPlayed >= TOTAL) {
+        newGameBtn.textContent = 'See Results';
+      } else {
+        newGameBtn.textContent = `Next Game (${session.gamesPlayed}/${TOTAL})`;
+        updateSessionInfo();
+      }
+    }
+
+    async function showSessionResult() {
+      overlayResult.hidden = false;
+      ghost(scoreArea);
+      ghost(statusEl);
+      ghost(sessionInfoEl);
+      ghost(newGameBtn);
+      lbArea.hidden = false;
+
+      document.getElementById('result-name').textContent   = session.name;
+      document.getElementById('result-score').textContent  = session.wins;
+      document.getElementById('result-sub').textContent    = `draws: ${scores.d} · losses: ${scores.l}`;
+      document.getElementById('result-status').textContent = 'Submitting score\u2026';
+
+      try {
+        const entries = await pushEntry(session.name, session.wins);
+        const rank = entries.findIndex(e => e.name === session.name && e.wins === session.wins) + 1;
+        document.getElementById('result-status').textContent = `Score submitted! You\u2019re #${rank} on the board.`;
+        renderLeaderboard(entries);
+      } catch {
+        document.getElementById('result-status').textContent = 'Score submitted!';
+        loadLeaderboard();
+      }
+    }
+
+    // ── Game logic ────────────────────────────────────────────────────────────
 
     function newGame() {
+      if (session && session.gamesPlayed >= TOTAL) { showSessionResult(); return; }
       board      = Array(9).fill(null);
       gameOver   = false;
       playerTurn = true;
-      cells.forEach(c => {
-        c.textContent = '';
-        c.className   = 'cell';
-      });
+      cells.forEach(c => { c.textContent = ''; c.className = 'cell'; });
+      if (session) { newGameBtn.disabled = true; newGameBtn.textContent = 'Playing\u2026'; }
       setStatus('Your turn');
     }
 
-    function setStatus(msg) {
-      statusEl.textContent = msg;
-    }
+    function setStatus(msg) { statusEl.textContent = msg; }
 
     function checkWinner(b, mark) {
       return WINS.find(line => line.every(i => b[i] === mark)) || null;
     }
 
-    function isDraw(b) {
-      return b.every(v => v !== null);
-    }
+    function isDraw(b) { return b.every(v => v !== null); }
 
-    function highlightWin(line) {
-      line.forEach(i => cells[i].classList.add('win-cell'));
-    }
+    function highlightWin(line) { line.forEach(i => cells[i].classList.add('win-cell')); }
 
     function playerMove(i) {
       if (!playerTurn || gameOver || board[i]) return;
       board[i] = 'X';
       render();
-
       const win = checkWinner(board, 'X');
-      if (win) { highlightWin(win); setStatus('You win!'); scores.w++; updateScore(); gameOver = true; return; }
-      if (isDraw(board)) { setStatus("It's a draw!"); scores.d++; updateScore(); gameOver = true; return; }
-
+      if (win) { highlightWin(win); setStatus('You win!'); scores.w++; updateScore(); gameOver = true; if (session) onGameEnd('win'); return; }
+      if (isDraw(board)) { setStatus("It's a draw!"); scores.d++; updateScore(); gameOver = true; if (session) onGameEnd('draw'); return; }
       playerTurn = false;
-      setStatus('AI is thinking…');
+      setStatus('AI is thinking\u2026');
       setTimeout(aiMove, 350);
     }
 
@@ -229,47 +539,38 @@
       const move = getBestMove(board);
       board[move] = 'O';
       render();
-
       const win = checkWinner(board, 'O');
-      if (win) { highlightWin(win); setStatus('AI wins!'); scores.l++; updateScore(); gameOver = true; return; }
-      if (isDraw(board)) { setStatus("It's a draw!"); scores.d++; updateScore(); gameOver = true; return; }
-
+      if (win) { highlightWin(win); setStatus('AI wins!'); scores.l++; updateScore(); gameOver = true; if (session) onGameEnd('loss'); return; }
+      if (isDraw(board)) { setStatus("It's a draw!"); scores.d++; updateScore(); gameOver = true; if (session) onGameEnd('draw'); return; }
       playerTurn = true;
       setStatus('Your turn');
     }
 
     function getBestMove(b) {
-      // Always take the win
       for (const line of WINS) {
         const [a, bI, c] = line;
-        if (b[a] === 'O' && b[bI] === 'O' && b[c] === null) return c;
-        if (b[a] === 'O' && b[c] === 'O' && b[bI] === null) return bI;
-        if (b[bI] === 'O' && b[c] === 'O' && b[a] === null) return a;
+        if (b[a]==='O' && b[bI]==='O' && b[c]===null) return c;
+        if (b[a]==='O' && b[c]==='O' && b[bI]===null) return bI;
+        if (b[bI]==='O' && b[c]==='O' && b[a]===null) return a;
       }
-      // Always block the player's win
       for (const line of WINS) {
         const [a, bI, c] = line;
-        if (b[a] === 'X' && b[bI] === 'X' && b[c] === null) return c;
-        if (b[a] === 'X' && b[c] === 'X' && b[bI] === null) return bI;
-        if (b[bI] === 'X' && b[c] === 'X' && b[a] === null) return a;
+        if (b[a]==='X' && b[bI]==='X' && b[c]===null) return c;
+        if (b[a]==='X' && b[c]==='X' && b[bI]===null) return bI;
+        if (b[bI]==='X' && b[c]==='X' && b[a]===null) return a;
       }
-      // 70% of the time play smart (center → corners → edges)
-      // 30% play random — keeps it beatable
       if (Math.random() < 0.7) {
-        const preferred = [4, 0, 2, 6, 8, 1, 3, 5, 7];
-        for (const i of preferred) {
-          if (b[i] === null) return i;
-        }
+        for (const i of [4,0,2,6,8,1,3,5,7]) { if (b[i]===null) return i; }
       }
-      const empty = b.map((v, i) => v === null ? i : -1).filter(i => i !== -1);
+      const empty = b.map((v,i) => v===null ? i : -1).filter(i => i!==-1);
       return empty[Math.floor(Math.random() * empty.length)];
     }
 
     function render() {
       board.forEach((val, i) => {
         const c = cells[i];
-        if (val === 'X') { c.textContent = 'X'; c.classList.add('x', 'taken'); }
-        if (val === 'O') { c.textContent = 'O'; c.classList.add('o', 'taken'); }
+        if (val==='X') { c.textContent='X'; c.classList.add('x','taken'); }
+        if (val==='O') { c.textContent='O'; c.classList.add('o','taken'); }
       });
     }
 
@@ -279,10 +580,26 @@
       document.getElementById('score-l').textContent = scores.l;
     }
 
-    cells.forEach(c => c.addEventListener('click', () => playerMove(+c.dataset.i)));
+    // ── Listeners ─────────────────────────────────────────────────────────────
+
+    btnQuick.addEventListener('click', () => setMode('quick'));
+    btnLb.addEventListener('click',    () => setMode('leaderboard'));
+
+    document.getElementById('start-session-btn').addEventListener('click', startSession);
+    playerNameEl.addEventListener('keydown', e => { if (e.key === 'Enter') startSession(); });
+
     newGameBtn.addEventListener('click', newGame);
 
-    newGame();
+    document.getElementById('new-session-btn').addEventListener('click', () => {
+      session = null;
+      playerNameEl.value   = '';
+      overlayResult.hidden = true;
+      overlayName.hidden   = false;
+    });
+
+    cells.forEach(c => c.addEventListener('click', () => playerMove(+c.dataset.i)));
+
+    setMode('quick');
   </script>
   <script data-goatcounter="https://shroomslice.goatcounter.com/count"
           async src="//gc.zgo.at/count.js"></script>
