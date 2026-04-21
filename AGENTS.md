@@ -86,6 +86,36 @@ Images go in `docs/gallery/img/`. The user will provide the filename.
 - Keep any title exactly as the user provides it - don't rewrite or polish it
 - After adding the entry, ask if the user wants to commit and push
 
+## Adding a blog post
+
+Blog posts are authored in Markdown under `content/blog/` and generated into `docs/blog/`.
+
+### Frontmatter format
+
+```yaml
+---
+title: My Post Title
+date: 2026-04-20T21:00:00-04:00
+slug: my-post-title
+description: Short summary for the blog index and RSS.
+draft: false
+updated: 2026-04-22T09:30:00-04:00
+---
+```
+
+- Required fields: `title`, `date`, `slug`, `description`
+- `date` and `updated` must include an explicit timezone offset
+- `updated` and `draft` are optional
+- Keep the user's title and body wording intact unless they ask for editing help
+
+### Rules
+- Add one Markdown file per post in `content/blog/`
+- Build the blog with `python3 scripts/build_blog.py`
+- Generated output lives in `docs/blog/` and should not be hand-edited
+- Blog posts are long-form and separate from the log
+- The log RSS feed stays at `docs/feed.xml`; blog RSS lives at `docs/blog/feed.xml`
+- After adding or editing a blog post, rebuild the blog and ask if the user wants to commit and push
+
 ## Data dump folder
 
 `datadump/` is a local-only scratch folder for dropping in screenshots, images, reference files, or any content needed during a session. Its contents are gitignored and will never be committed.
@@ -100,6 +130,9 @@ Images go in `docs/gallery/img/`. The user will provide the filename.
 ```
 docs/
   index.html      - homepage
+  blog/
+    index.html    - blog archive
+    feed.xml      - blog RSS feed
   log/
     index.html    - the log feed
   gallery/
@@ -115,4 +148,8 @@ docs/
   robots.txt
   sitemap.xml
   CNAME           - glennhurley.com
+content/
+  blog/           - Markdown source for blog posts
+scripts/
+  build_blog.py   - generates docs/blog/ from content/blog/
 ```

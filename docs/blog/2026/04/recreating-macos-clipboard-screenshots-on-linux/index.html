@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mac Clipboard Screenshots on Linux | Glenn Hurley</title>
+  <meta name="description" content="How to recreate macOS-style clipboard screenshots on Linux with a single Flameshot shortcut." />
+  <link rel="canonical" href="https://glennhurley.com/blog/2026/04/recreating-macos-clipboard-screenshots-on-linux/" />
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="alternate" type="application/rss+xml" title="Glenn Hurley Blog" href="/blog/feed.xml" />
+  <link rel="stylesheet" href="/css/blog.css" />
+</head>
+<body>
+  <main class="post-shell">
+    <article class="post">
+      <div class="blog-topbar">
+        <a class="blog-home" href="/">&larr; glennhurley.com</a>
+        <a class="blog-toplink" href="/log">Log</a>
+      </div>
+      <header class="post-header">
+        <p class="post-backlink"><a href="/blog">&larr; Back to Blog</a></p>
+        <h1>Mac Clipboard Screenshots on Linux</h1>
+        <p class="post-meta"><time datetime="2026-04-20">April 20, 2026</time></p>
+        
+      </header>
+      <div class="post-body">
+        <p>One of the most underrated macOS features is this shortcut:</p>
+<p><strong><code>Cmd + Ctrl + Shift + 4</code></strong></p>
+<p>On my Linux box, I mapped the same shortcut pattern to:</p>
+<p><strong><code>Alt + Ctrl + Shift + 4</code></strong></p>
+<p>It lets you:</p>
+<ul><li>Select an area of the screen</li><li>Instantly copy it to your clipboard</li><li>Paste it anywhere (Slack, email, docs, etc.)</li></ul>
+<p>No files. No cleanup. Just fast.</p>
+<p>When I moved back to Linux, this was the one thing I missed the most.</p>
+<p>So I recreated it with the same keys and same feel. The only real change is swapping macOS&#x27;s <code>Cmd</code> key for Linux&#x27;s <code>Alt</code> key.</p>
+<h2>The Goal</h2>
+<p>I wanted a single shortcut on Linux that:</p>
+<ul><li>Lets me drag to select part of the screen</li><li>Copies directly to the clipboard</li><li>Doesn’t save a file</li><li>Feels instant and frictionless</li></ul>
+<p>Same idea, same key pattern, just adapted for Linux.</p>
+<h2>The Tool: Flameshot</h2>
+<p>Flameshot makes this possible with one command:</p>
+<pre><code class="language-bash">flameshot gui -c</code></pre>
+<p>What this does:</p>
+<ul><li>Opens the selection UI</li><li>Lets you drag to capture</li><li>Automatically copies the result to your clipboard</li></ul>
+<p>That <code>-c</code> flag is the key.</p>
+<h2>Step 1: Install Flameshot</h2>
+<p>On Debian/Ubuntu/Pop!_OS:</p>
+<pre><code class="language-bash">sudo apt install flameshot</code></pre>
+<h2>Step 2: Create the Shortcut</h2>
+<p>Go to:</p>
+<p>Settings → Keyboard → View and Customize Shortcuts</p>
+<p>Scroll down and add a <strong>custom shortcut</strong>.</p>
+<h2>Step 3: Add Your Mac-Style Binding</h2>
+<p>Set:</p>
+<ul><li><strong>Name:</strong> Screenshot to Clipboard</li><li><strong>Command:</strong></li></ul>
+<pre><code class="language-bash">flameshot gui -c</code></pre>
+<ul><li><strong>Shortcut:</strong></li></ul>
+<p>Set it to <strong><code>Alt + Ctrl + Shift + 4</code></strong></p>
+<h2>What I Used</h2>
+<p>To keep the shortcut as close as possible to macOS, I used:</p>
+<p><strong><code>Alt + Ctrl + Shift + 4</code></strong></p>
+<p>Why?</p>
+<ul><li>Linux doesn’t have <code>Cmd</code></li><li><code>Alt</code> is the closest stand-in for that position in the shortcut</li><li>The rest of the keys stay exactly the same</li></ul>
+<h2>Step 4: Test It</h2>
+<p>Press your shortcut.</p>
+<p>You should get:</p>
+<ul><li>A crosshair cursor</li><li>Click and drag to select</li><li>Release → screenshot is already in your clipboard</li></ul>
+<p>Now just hit paste (<code>Ctrl + V</code>) anywhere.</p>
+<h2>The Result</h2>
+<p>This gets you almost the exact same shortcut on both systems:</p>
+<div class="post-table-wrap"><table><thead><tr><th>Action</th><th>macOS</th><th>Linux (with Flameshot)</th></tr></thead><tbody><tr><td>Clipboard area screenshot</td><td><code>Cmd + Ctrl + Shift + 4</code></td><td><code>Alt + Ctrl + Shift + 4</code></td></tr></tbody></table></div>
+<h2>Final Thoughts</h2>
+<p>Most Linux screenshot tools default to saving files.</p>
+<p>That’s fine… until you realize how often you just want to paste something quickly.</p>
+<p>This setup removes that friction entirely.</p>
+<p>It’s one of those tiny tweaks that ends up saving time <em>every single day</em>.</p>
+<p>If you’re coming from macOS, this is one shortcut worth recreating first.</p>
+      </div>
+    </article>
+
+    <footer class="blog-footer">
+      &copy; <span id="year"></span> Glenn Hurley &nbsp;&middot;&nbsp; <a href="/blog/feed.xml">RSS</a>
+    </footer>
+  </main>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+  <script data-goatcounter="https://shroomslice.goatcounter.com/count"
+          async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

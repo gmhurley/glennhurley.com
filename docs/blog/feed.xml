@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Glenn Hurley Blog</title>
+    <link>https://glennhurley.com/blog</link>
+    <description>Long-form writing from Glenn Hurley.</description>
+    <language>en-us</language>
+    <atom:link href="https://glennhurley.com/blog/feed.xml" rel="self" type="application/rss+xml" />
+
+    <item>
+      <title>Mac Clipboard Screenshots on Linux</title>
+      <link>https://glennhurley.com/blog/2026/04/recreating-macos-clipboard-screenshots-on-linux/</link>
+      <guid>https://glennhurley.com/blog/2026/04/recreating-macos-clipboard-screenshots-on-linux/</guid>
+      <pubDate>Mon, 20 Apr 2026 22:55:00 -0400</pubDate>
+      <description><![CDATA[How to recreate macOS-style clipboard screenshots on Linux with a single Flameshot shortcut.]]></description>
+    </item>
+  </channel>
+</rss>
