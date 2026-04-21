@@ -8,6 +8,14 @@
     <atom:link href="https://glennhurley.com/feed.xml" rel="self" type="application/rss+xml" />
 
     <item>
+      <title>The blog is up.</title>
+      <link>https://glennhurley.com/log#2026-04-20</link>
+      <guid>https://glennhurley.com/log#2026-04-20</guid>
+      <pubDate>Mon, 20 Apr 2026 23:32:00 -0400</pubDate>
+      <description><![CDATA[The blog is up. Longer posts now live at <a href="https://glennhurley.com/blog">glennhurley.com/blog</a>.]]></description>
+    </item>
+
+    <item>
       <title>Built a Hangman game.</title>
       <link>https://glennhurley.com/log#2026-04-19b</link>
       <guid>https://glennhurley.com/log#2026-04-19b</guid>
