@@ -33,7 +33,7 @@ Use today's date. Default location is **Winston-Salem, NC** unless the user spec
 ```
 
 ### Rules
-- When the user says "post to Twitter", "tweet this", or similar, treat it as a request to add a log entry — the log is a Twitter clone
+- When the user says "post to Twitter", "tweet this", or similar, treat it as a request to add a log entry - the log is a Twitter clone
 - Always ask the user for the current time before adding a post
 - After adding the log entry, also add a matching `<item>` to the top of `docs/feed.xml` (below the `<channel>` opening tags, above all other items)
 
@@ -52,10 +52,10 @@ Use today's date. Default location is **Winston-Salem, NC** unless the user spec
 - `pubDate` uses RFC 822 format and Eastern time (-0400 EDT / -0500 EST)
 - Any relative links in the description (e.g. `/gallery`) should be absolute (`https://glennhurley.com/gallery`)
 - The `id` in the `<link>` and `<guid>` must match the article `id` in the log HTML
-- Entries go **newest first** — insert above all existing entries
+- Entries go **newest first** - insert above all existing entries
 - `id` on the article is `YYYY-MM-DD` (used for shareable anchor links)
 - If two posts share the same date, append a letter: `2026-04-11b`, `2026-04-11c`
-- Keep post text as the user wrote it — don't rewrite or polish it
+- Keep post text as the user wrote it - don't rewrite or polish it
 - After adding the entry, ask if the user wants to commit and push
 
 ## Adding a gallery piece
@@ -79,11 +79,11 @@ Images go in `docs/gallery/img/`. The user will provide the filename.
 ```
 
 ### Rules
-- Entries go **newest first** — insert above all existing entries
-- The artist's pseudonym is **Artist A** — never publish her real name
-- Title and date are optional — omit or leave empty if the piece is untitled
+- Entries go **newest first** - insert above all existing entries
+- The artist's pseudonym is **Artist A** - never publish her real name
+- Title and date are optional - omit or leave empty if the piece is untitled
 - Use today's year for the date unless the user specifies otherwise
-- Keep any title exactly as the user provides it — don't rewrite or polish it
+- Keep any title exactly as the user provides it - don't rewrite or polish it
 - After adding the entry, ask if the user wants to commit and push
 
 ## Data dump folder
@@ -92,27 +92,27 @@ Images go in `docs/gallery/img/`. The user will provide the filename.
 
 ### Rules
 - Remind the user to clean out `datadump/` at the end of each session
-- Never commit anything from `datadump/` — only `datadump/.gitkeep` is tracked
+- Never commit anything from `datadump/` - only `datadump/.gitkeep` is tracked
 - If the user pastes or references a file for context, suggest saving it to `datadump/` first
 
 ## Structure
 
 ```
 docs/
-  index.html      — homepage
+  index.html      - homepage
   log/
-    index.html    — the log feed
+    index.html    - the log feed
   gallery/
-    index.html    — Artist A's gallery
-    img/          — artwork image files
+    index.html    - Artist A's gallery
+    img/          - artwork image files
   css/
-    styles.css    — homepage styles
-    log.css       — log page styles
-    gallery.css   — gallery styles
-  feed.xml        — RSS feed (keep in sync with log entries)
-  og.png          — open graph image
+    styles.css    - homepage styles
+    log.css       - log page styles
+    gallery.css   - gallery styles
+  feed.xml        - RSS feed (keep in sync with log entries)
+  og.png          - open graph image
   favicon.ico
   robots.txt
   sitemap.xml
-  CNAME           — glennhurley.com
+  CNAME           - glennhurley.com
 ```
