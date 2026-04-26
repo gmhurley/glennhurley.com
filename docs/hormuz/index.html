@@ -420,14 +420,14 @@ window.addEventListener('mouseup',   () => { touch.left = touch.right = false; }
 
 // ── obstacle definitions ─────────────────────────────────────────
 const OBS = [
-  { id: 'mine',    label: 'NAVAL MINE', color: '#aaaaaa', r: 18, baseSpeed:   0, pattern: 'drift',  weight: 3 },
-  { id: 'boat',    label: 'IRGCN BOAT', color: '#bbb8aa', r: 12, baseSpeed: 170, pattern: 'zigzag', weight: 3 },
+  { id: 'mine',    label: 'NAVAL MINE', color: '#aaaaaa', r: 18, baseSpeed:   0, pattern: 'drift',  weight: 1 },
+  { id: 'boat',    label: 'IRGCN BOAT', color: '#bbb8aa', r: 12, baseSpeed: 170, pattern: 'zigzag', weight: 4 },
   { id: 'drone',   label: 'SHAHED-136', color: '#d4cdb0', r: 11, baseSpeed:  95, pattern: 'sine',   weight: 2 },
   { id: 'missile', label: 'ANTI-SHIP',  color: '#ff4400', r:  7, baseSpeed: 210, pattern: 'homing', weight: 2 },
 ];
 
 function pickType() {
-  const progress = Math.min(distance / (BOSS_THRESHOLD * NM_PX), 1);
+  const progress = Math.min(distance / (FINISH_NM * NM_PX), 1);
   const pool = [];
   for (const t of OBS) {
     let w = t.weight;
@@ -485,8 +485,9 @@ function boom(x, y, color, n = 14) {
 
 // ── draw helpers ─────────────────────────────────────────────────
 function drawWater() {
+  // fill the full canvas — shores are drawn on top, so coves get water too
   ctx.fillStyle = '#0c2540';
-  ctx.fillRect(WATER_L, 0, WATER_W, LH);
+  ctx.fillRect(0, 0, LW, LH);
 
   ctx.save();
   const sp = scrollY % 32;
@@ -494,9 +495,9 @@ function drawWater() {
   ctx.lineWidth = 1;
   for (let y = -32 + sp; y < LH + 32; y += 32) {
     ctx.beginPath();
-    for (let x = WATER_L; x <= WATER_R; x += 5) {
+    for (let x = 0; x <= LW; x += 5) {
       const wx = Math.sin(x * 0.025 + y * 0.018) * 3;
-      x === WATER_L ? ctx.moveTo(x, y + wx) : ctx.lineTo(x, y + wx);
+      x === 0 ? ctx.moveTo(x, y + wx) : ctx.lineTo(x, y + wx);
     }
     ctx.stroke();
   }
