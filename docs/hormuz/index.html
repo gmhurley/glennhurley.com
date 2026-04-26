@@ -127,6 +127,125 @@
     .lb-table td { padding: 5px 6px; color: #a0c0d8; }
     .lb-table tr.you td { color: #ffd700; }
     .lb-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+    /* ── Win95 dialog ─────────────────────────────────── */
+    #dialog-panel {
+      background: transparent;
+      pointer-events: none;
+      align-items: flex-start;
+      padding-top: 22vh;
+    }
+    #dialog-panel .win95 { pointer-events: auto; }
+
+    .win95 {
+      background: #c0c0c0;
+      border-top:    2px solid #ffffff;
+      border-left:   2px solid #ffffff;
+      border-right:  2px solid #404040;
+      border-bottom: 2px solid #404040;
+      box-shadow: 1px 1px 0 #000;
+      width: min(320px, 86vw);
+      font-family: 'MS Sans Serif', 'Tahoma', Geneva, sans-serif;
+      color: #000;
+      animation: w95pop .12s ease-out;
+    }
+    @keyframes w95pop {
+      from { transform: scale(.85); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
+    .win95-tb {
+      background: linear-gradient(90deg, #000080 0%, #1084d0 100%);
+      color: #fff;
+      padding: 3px 4px 2px 6px;
+      font-size: 11px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      letter-spacing: 0.02em;
+    }
+    .win95-x {
+      background: #c0c0c0;
+      border-top:    1px solid #ffffff;
+      border-left:   1px solid #ffffff;
+      border-right:  1px solid #000000;
+      border-bottom: 1px solid #000000;
+      width: 16px;
+      height: 14px;
+      font-size: 11px;
+      line-height: 9px;
+      font-weight: bold;
+      color: #000;
+      cursor: pointer;
+      padding: 0;
+      font-family: inherit;
+    }
+    .win95-x:active {
+      border-top:    1px solid #000000;
+      border-left:   1px solid #000000;
+      border-right:  1px solid #ffffff;
+      border-bottom: 1px solid #ffffff;
+    }
+
+    .win95-body {
+      padding: 16px 14px 12px;
+    }
+    .win95-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .win95-icon {
+      width: 32px;
+      height: 32px;
+      background: #ffe000;
+      border-top:    2px solid #ffff80;
+      border-left:   2px solid #ffff80;
+      border-right:  2px solid #806000;
+      border-bottom: 2px solid #806000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000;
+      font-weight: bold;
+      font-size: 22px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .win95-msg {
+      font-size: 12px;
+      line-height: 1.45;
+      color: #000;
+    }
+    .win95-msg b { font-weight: bold; }
+    .win95-buttons {
+      display: flex;
+      justify-content: center;
+    }
+    .win95-btn {
+      background: #c0c0c0;
+      border-top:    2px solid #ffffff;
+      border-left:   2px solid #ffffff;
+      border-right:  2px solid #404040;
+      border-bottom: 2px solid #404040;
+      padding: 4px 22px;
+      min-width: 76px;
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      color: #000;
+      outline: 1px dotted #000;
+      outline-offset: -4px;
+    }
+    .win95-btn:active {
+      border-top:    2px solid #404040;
+      border-left:   2px solid #404040;
+      border-right:  2px solid #ffffff;
+      border-bottom: 2px solid #ffffff;
+      padding: 5px 21px 3px 23px;
+    }
   </style>
 </head>
 <body>
@@ -168,6 +287,24 @@
       <tbody id="lb-body"></tbody>
     </table>
     <button class="btn-primary" id="replay-btn">⚓ REDEPLOY</button>
+  </div>
+</div>
+
+<div class="panel hidden" id="dialog-panel">
+  <div class="win95">
+    <div class="win95-tb">
+      <span>USS MANIFEST DESTINY (GOLDEN EDITION)</span>
+      <button class="win95-x" id="dialog-x">×</button>
+    </div>
+    <div class="win95-body">
+      <div class="win95-row">
+        <div class="win95-icon">!</div>
+        <div class="win95-msg" id="dialog-msg"></div>
+      </div>
+      <div class="win95-buttons">
+        <button class="win95-btn" id="dialog-ok">OK</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -419,9 +556,9 @@ function drawTanker(x, y, flagEmoji, alpha) {
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  // boot-topping (waterline stripe)
-  ctx.strokeStyle = '#1a0608';
-  ctx.lineWidth = 1.5;
+  // boot topping (red anti-fouling stripe at waterline)
+  ctx.strokeStyle = '#aa1a08';
+  ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(-hw + 1, -hh + 16); ctx.lineTo(-hw + 1, hh - 4);
   ctx.moveTo( hw - 1, -hh + 16); ctx.lineTo( hw - 1, hh - 4);
@@ -444,9 +581,18 @@ function drawTanker(x, y, flagEmoji, alpha) {
   ctx.fillStyle = '#222';
   ctx.fillRect(-3, -hh + 10, 6, 3);
 
-  // main cargo deck (yellow-ochre, common tanker deck color)
-  ctx.fillStyle = '#5a4a18';
+  // main cargo deck (green non-skid coating, common on tankers)
+  ctx.fillStyle = '#2c4220';
   ctx.fillRect(-hw + 3, -hh + 22, TW - 6, hh + (hh - 24));
+  // deck plating seams
+  ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+  ctx.lineWidth = 0.5;
+  for (const sy of [-hh + 30, -hh + 50, -hh + 70, hh - 30]) {
+    ctx.beginPath();
+    ctx.moveTo(-hw + 3, sy);
+    ctx.lineTo( hw - 3, sy);
+    ctx.stroke();
+  }
 
   // central pipe manifold running fore-to-aft
   ctx.strokeStyle = '#aaa';
@@ -474,6 +620,30 @@ function drawTanker(x, y, flagEmoji, alpha) {
   ctx.beginPath();
   ctx.moveTo(-hw + 4, -2);
   ctx.lineTo( hw - 4, -2);
+  ctx.stroke();
+
+  // bridge wings (overhanging platforms)
+  ctx.fillStyle = '#d8d8d0';
+  ctx.fillRect(-hw + 1, hh - 19, 4, 6);
+  ctx.fillRect( hw - 5, hh - 19, 4, 6);
+  ctx.strokeStyle = '#666';
+  ctx.lineWidth = 0.5;
+  ctx.strokeRect(-hw + 1, hh - 19, 4, 6);
+  ctx.strokeRect( hw - 5, hh - 19, 4, 6);
+
+  // lifeboats — orange, on davits flanking the accommodation block
+  ctx.fillStyle = '#ff7700';
+  ctx.fillRect(-hw + 0.5, hh - 28, 5, 7);
+  ctx.fillRect( hw - 5.5, hh - 28, 5, 7);
+  ctx.strokeStyle = '#882200';
+  ctx.lineWidth = 0.5;
+  ctx.strokeRect(-hw + 0.5, hh - 28, 5, 7);
+  ctx.strokeRect( hw - 5.5, hh - 28, 5, 7);
+  // davit lines
+  ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+  ctx.beginPath();
+  ctx.moveTo(-hw + 3, hh - 28); ctx.lineTo(-hw + 3, hh - 32);
+  ctx.moveTo( hw - 3, hh - 28); ctx.lineTo( hw - 3, hh - 32);
   ctx.stroke();
 
   // accommodation block at the STERN — white, with windows
@@ -515,26 +685,45 @@ function drawMine(x, y, r, age) {
   ctx.translate(x, y);
   ctx.rotate(age * 0.25);
 
-  ctx.fillStyle = '#8a6012';
-  ctx.strokeStyle = '#4a3208';
-  ctx.lineWidth = 2;
+  // body — matte black with subtle highlight
+  const bg = ctx.createRadialGradient(-r * 0.4, -r * 0.4, 1, 0, 0, r);
+  bg.addColorStop(0, '#3a3a3a');
+  bg.addColorStop(0.6, '#101010');
+  bg.addColorStop(1, '#000000');
+  ctx.fillStyle = bg;
   ctx.beginPath();
   ctx.arc(0, 0, r, 0, Math.PI * 2);
   ctx.fill();
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 1.5;
   ctx.stroke();
 
+  // rust patches
+  ctx.fillStyle = 'rgba(140, 60, 20, 0.5)';
+  ctx.beginPath();
+  ctx.arc(r * 0.25, r * 0.15, r * 0.22, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(-r * 0.4, r * 0.3, r * 0.14, 0, Math.PI * 2);
+  ctx.fill();
+
+  // horns / contact spikes
   for (let i = 0; i < 8; i++) {
     const a = (i / 8) * Math.PI * 2;
-    ctx.strokeStyle = '#4a3208';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r);
     ctx.lineTo(Math.cos(a) * (r + 7), Math.sin(a) * (r + 7));
     ctx.stroke();
-    ctx.fillStyle = '#ddaa00';
+    // lead horn tip
+    ctx.fillStyle = '#666';
     ctx.beginPath();
-    ctx.arc(Math.cos(a) * (r + 8), Math.sin(a) * (r + 8), 2, 0, Math.PI * 2);
+    ctx.arc(Math.cos(a) * (r + 8), Math.sin(a) * (r + 8), 2.2, 0, Math.PI * 2);
     ctx.fill();
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 0.6;
+    ctx.stroke();
   }
 
   ctx.restore();
@@ -719,73 +908,201 @@ function drawMissile(x, y, r, vy, vx) {
   ctx.restore();
 }
 
+function drawTriTurret(yc, dir) {
+  // dir = -1 means barrels point UP (toward bow / negative y)
+  // dir = +1 means barrels point DOWN (toward stern / positive y)
+  const tr = 11;
+  // barbette shadow
+  ctx.fillStyle = '#604000';
+  ctx.beginPath();
+  ctx.arc(0, yc, tr + 2, 0, Math.PI * 2);
+  ctx.fill();
+  // turret body
+  const tg = ctx.createRadialGradient(-3, yc - 3, 1, 0, yc, tr);
+  tg.addColorStop(0, '#f8d850');
+  tg.addColorStop(1, '#a07a00');
+  ctx.fillStyle = tg;
+  ctx.beginPath();
+  ctx.arc(0, yc, tr, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#5a4000';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  // 3 barrels
+  ctx.fillStyle = '#1a1a1a';
+  const barrelLen = 16;
+  const tipY = yc + dir * (tr + barrelLen);
+  for (const ox of [-4, 0, 4]) {
+    ctx.fillRect(ox - 1.4, dir < 0 ? tipY : yc, 2.8, barrelLen);
+  }
+  // muzzle ring
+  ctx.fillStyle = '#000';
+  for (const ox of [-4, 0, 4]) {
+    ctx.beginPath();
+    ctx.arc(ox, tipY, 1.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
 function drawBoss(b) {
   ctx.save();
   ctx.translate(b.x, b.y);
 
-  const bw = WATER_W + 10, bh = 160;
+  const bw = 60, bh = 200;
+  const hw = bw / 2, hh = bh / 2;
 
-  // glow
-  const gg = ctx.createRadialGradient(0, 0, 20, 0, 0, bh * 1.2);
-  gg.addColorStop(0, 'rgba(255,215,0,0.25)');
-  gg.addColorStop(1, 'rgba(255,215,0,0)');
+  // golden glow
+  const gg = ctx.createRadialGradient(0, 0, 30, 0, 0, bh * 0.9);
+  gg.addColorStop(0, 'rgba(255,215,0,0.32)');
+  gg.addColorStop(0.5, 'rgba(255,165,0,0.12)');
+  gg.addColorStop(1, 'rgba(255,165,0,0)');
   ctx.fillStyle = gg;
-  ctx.fillRect(-bw / 2 - 40, -bh / 2 - 40, bw + 80, bh + 80);
+  ctx.fillRect(-bw, -bh, bw * 2, bh * 2);
 
-  // hull
-  ctx.fillStyle = '#b89000';
+  // bow wake
+  const wg = ctx.createLinearGradient(0, -hh - 4, 0, -hh - 60);
+  wg.addColorStop(0, 'rgba(255,255,255,0.30)');
+  wg.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = wg;
   ctx.beginPath();
-  ctx.moveTo(-bw / 2, bh / 2);
-  ctx.lineTo( bw / 2, bh / 2);
-  ctx.lineTo( bw / 2, -bh / 2 + 22);
-  ctx.lineTo(0, -bh / 2);
-  ctx.lineTo(-bw / 2, -bh / 2 + 22);
+  ctx.moveTo(-6, -hh + 2);
+  ctx.lineTo(-hw - 18, -hh - 50);
+  ctx.lineTo(hw + 18, -hh - 50);
+  ctx.lineTo(6, -hh + 2);
   ctx.closePath();
   ctx.fill();
 
-  ctx.strokeStyle = '#ffe060';
-  ctx.lineWidth = 3;
+  // hull (golden)
+  const hullG = ctx.createLinearGradient(-hw, 0, hw, 0);
+  hullG.addColorStop(0, '#a87808');
+  hullG.addColorStop(0.5, '#d8a418');
+  hullG.addColorStop(1, '#a87808');
+  ctx.fillStyle = hullG;
+  ctx.beginPath();
+  ctx.moveTo(-hw, hh - 2);
+  ctx.quadraticCurveTo(-hw, hh, -hw + 4, hh);
+  ctx.lineTo(hw - 4, hh);
+  ctx.quadraticCurveTo(hw, hh, hw, hh - 2);
+  ctx.lineTo(hw, -hh + 38);
+  ctx.quadraticCurveTo(hw, -hh + 12, hw - 6, -hh + 6);
+  ctx.lineTo(2, -hh);
+  ctx.lineTo(-2, -hh);
+  ctx.lineTo(-hw + 6, -hh + 6);
+  ctx.quadraticCurveTo(-hw, -hh + 12, -hw, -hh + 38);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#3a2800';
+  ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // deck
-  ctx.fillStyle = '#d0a820';
-  ctx.fillRect(-bw / 2 + 10, -bh / 2 + 22, bw - 20, 40);
+  // teak deck (slightly darker, matte)
+  ctx.fillStyle = '#8a6818';
+  ctx.beginPath();
+  ctx.moveTo(-hw + 4, hh - 3);
+  ctx.lineTo(hw - 4, hh - 3);
+  ctx.lineTo(hw - 4, -hh + 40);
+  ctx.lineTo(hw - 8, -hh + 12);
+  ctx.lineTo(0, -hh + 4);
+  ctx.lineTo(-hw + 8, -hh + 12);
+  ctx.lineTo(-hw + 4, -hh + 40);
+  ctx.closePath();
+  ctx.fill();
 
-  // superstructure
+  // forecastle anchor + cleats
+  ctx.fillStyle = '#222';
+  ctx.fillRect(-2.5, -hh + 16, 5, 4);
+  ctx.fillRect(-7, -hh + 22, 2, 2);
+  ctx.fillRect(5, -hh + 22, 2, 2);
+
+  // FORWARD TURRETS — 2 superfiring (Iowa-class style)
+  drawTriTurret(-hh + 38, -1);   // turret 1 (lower, barrels up)
+  drawTriTurret(-hh + 64, -1);   // turret 2 (raised, barrels up)
+
+  // CONNING / BRIDGE TOWER (centered, layered)
+  // base superstructure
+  ctx.fillStyle = '#9a7008';
+  ctx.fillRect(-hw + 10, -hh + 80, bw - 20, 46);
+  ctx.strokeStyle = '#5a4000';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(-hw + 10, -hh + 80, bw - 20, 46);
+  // bridge wings
+  ctx.fillStyle = '#a87808';
+  ctx.fillRect(-hw + 4, -hh + 84, 6, 10);
+  ctx.fillRect(hw - 10, -hh + 84, 6, 10);
+  // pilot house
   ctx.fillStyle = '#c89818';
-  ctx.fillRect(-44, -bh / 2 + 30, 88, 55);
-  ctx.fillStyle = '#dab828';
-  ctx.fillRect(-30, -bh / 2 + 34, 60, 16);
+  ctx.fillRect(-14, -hh + 84, 28, 12);
+  // bridge windows
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(-12, -hh + 86, 24, 2);
+  // mast / radar
+  ctx.strokeStyle = '#3a2800';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(0, -hh + 96);
+  ctx.lineTo(0, -hh + 110);
+  ctx.stroke();
+  // radar bar
+  ctx.beginPath();
+  ctx.moveTo(-7, -hh + 102);
+  ctx.lineTo(7, -hh + 102);
+  ctx.stroke();
+  // radome
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(0, -hh + 100, 2.5, 0, Math.PI * 2);
+  ctx.fill();
 
-  // gun turrets
-  ctx.fillStyle = '#8a7010';
-  for (const tx of [-90, -46, 0, 46, 90]) {
+  // smokestack
+  ctx.fillStyle = '#5a4000';
+  ctx.fillRect(-7, -hh + 112, 14, 14);
+  ctx.fillStyle = '#3a2800';
+  ctx.fillRect(-7, -hh + 112, 14, 2);
+  // stack badge — gold star
+  ctx.fillStyle = '#ffe040';
+  ctx.font = 'bold 9px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('★', 0, -hh + 119);
+
+  // SECONDARY GUNS (5-inch mounts on the sides)
+  ctx.fillStyle = '#7a5800';
+  for (const sy of [-hh + 130, -hh + 144]) {
     ctx.beginPath();
-    ctx.arc(tx, -bh / 2 + 48, 13, 0, Math.PI * 2);
+    ctx.arc(-hw + 6, sy, 3.5, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = '#706010';
-    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(tx, -bh / 2 + 48);
-    ctx.lineTo(tx, -bh / 2 + 22);
+    ctx.arc(hw - 6, sy, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    // tiny barrels pointing outward
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(-hw + 6, sy); ctx.lineTo(-hw + 1, sy);
+    ctx.moveTo( hw - 6, sy); ctx.lineTo( hw - 1, sy);
     ctx.stroke();
   }
 
-  // star
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 24px serif';
+  // AFT TURRET — 1 (barrels point toward stern)
+  drawTriTurret(hh - 36, 1);
+
+  // helipad on aft deck
+  ctx.strokeStyle = '#ffe040';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(0, hh - 14, 7, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = '#ffe040';
+  ctx.font = 'bold 8px Courier New';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('★', 0, -bh / 2 + 52);
+  ctx.fillText('H', 0, hh - 14);
 
-  // name
-  ctx.fillStyle = '#ffe060';
-  ctx.font = 'bold 10px Courier New';
+  // hull name plate (very small)
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 6px Courier New';
   ctx.textAlign = 'center';
-  ctx.fillText('USS MANIFEST DESTINY', 0, bh / 2 - 18);
-  ctx.fillStyle = '#cc9900';
-  ctx.font = '9px Courier New';
-  ctx.fillText('(GOLDEN EDITION)', 0, bh / 2 - 6);
+  ctx.fillText('USS M.D.', 0, -hh + 70);
 
   ctx.restore();
 }
@@ -868,24 +1185,13 @@ function hits(o) {
 }
 
 function update(dt) {
-  if (state === 'idle' || state === 'done') return;
+  if (state === 'idle' || state === 'done' || state === 'confronted') return;
 
   updateParticles(dt);
 
   if (state === 'dying') {
     dyingTimer += dt;
     if (dyingTimer > 2 && !leaderboardShown) {
-      leaderboardShown = true;
-      state = 'done';
-      showLeaderboard();
-    }
-    return;
-  }
-
-  if (state === 'eaten') {
-    eatenTimer += dt;
-    if (boss) { boss.timer += dt; boss.y += boss.vy * dt; }
-    if (eatenTimer > 3.5 && !leaderboardShown) {
       leaderboardShown = true;
       state = 'done';
       showLeaderboard();
@@ -919,22 +1225,32 @@ function update(dt) {
   // boss spawn
   if (!bossSpawned && distance / NM_PX >= bossTarget) {
     bossSpawned = true;
-    boss = { x: LW / 2, y: -170, vy: 45, timer: 0 };
+    boss = { x: LW / 2, y: -110, vy: 70, timer: 0 };
   }
 
-  // boss movement
+  // boss approach + perfect x-tracking (no escape)
   if (boss) {
     boss.timer += dt;
-    boss.vy = Math.min(boss.vy + 10 * dt, 220);
-    boss.y  += boss.vy * dt;
 
-    if (boss.y + 80 > player.y - TH / 2) {
-      state = 'eaten';
-      eatenTimer = 0;
-      leaderboardShown = false;
-      deathReason = tankerName.toUpperCase() + ' WAS NEUTRALIZED BY USS MANIFEST DESTINY (GOLDEN EDITION).';
-      boom(player.x, player.y, '#FFD700', 22);
-      boom(player.x, player.y, '#ff6600', 16);
+    // x always tracks player smoothly — no matter where they go
+    const dx = player.x - boss.x;
+    boss.x += dx * 3.2 * dt;
+    const cm = SHORE_W + 32;
+    boss.x = Math.max(cm, Math.min(LW - cm, boss.x));
+
+    // descend until locked menacingly above the tanker bow
+    const lockY = player.y - 200;
+    if (boss.y < lockY) {
+      boss.vy = Math.min(boss.vy + 22 * dt, 200);
+      boss.y += boss.vy * dt;
+      if (boss.y >= lockY) {
+        boss.y = lockY;
+        boss.x = player.x;
+        state = 'confronted';
+        leaderboardShown = false;
+        deathReason = tankerName.toUpperCase() + ' WAS BOARDED BY USS MANIFEST DESTINY (GOLDEN EDITION).';
+        showBossDialog();
+      }
     }
   }
 
@@ -982,48 +1298,53 @@ function draw() {
   drawParticles();
 
   // tanker — fades on death
-  const dead = state === 'dying' || state === 'eaten';
+  const dead = state === 'dying';
   drawTanker(player.x, player.y, FLAGS[selectedFlag].emoji, dead ? 0.25 : 1);
 
   if (state !== 'idle' && state !== 'done') drawHUD();
 
-  // boss warning
-  if (boss && state === 'playing' && boss.y < 0) {
+  // boss approach warning
+  if (boss && state === 'playing') {
     const bt = boss.timer;
     if (Math.sin(bt * 9) > 0) {
       ctx.save();
-      ctx.globalAlpha = Math.min(1, bt * 2);
+      ctx.globalAlpha = Math.min(1, bt * 1.6);
       ctx.fillStyle = '#ffd700';
       ctx.font = 'bold 12px Courier New';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('⚠  USS MANIFEST DESTINY DETECTED  ⚠', LW / 2, 56);
+      ctx.fillText('⚠  U.S. NAVY VESSEL APPROACHING  ⚠', LW / 2, 56);
       ctx.restore();
     }
   }
+}
 
-  // eaten overlay
-  if (state === 'eaten') {
-    const a = Math.min(1, eatenTimer * 0.5);
-    ctx.save();
-    ctx.globalAlpha = a * 0.72;
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, LW, LH);
-    ctx.globalAlpha = a;
-    ctx.fillStyle = '#FFD700';
-    ctx.font = 'bold 18px Courier New';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('NEUTRALIZED', LW / 2, LH / 2 - 14);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '11px Courier New';
-    ctx.fillText('BY USS MANIFEST DESTINY', LW / 2, LH / 2 + 12);
-    ctx.font = '9px Courier New';
-    ctx.fillStyle = '#888';
-    ctx.fillText('(GOLDEN EDITION)', LW / 2, LH / 2 + 28);
-    ctx.restore();
+// ── boss confrontation dialog ────────────────────────────────────
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
+function showBossDialog() {
+  const msg = document.getElementById('dialog-msg');
+  msg.innerHTML =
+    `<b>M/V ${escapeHtml(tankerName.toUpperCase())},</b><br><br>` +
+    `You are in violation of traversing the Strait of America.<br><br>` +
+    `Prepare to be boarded.`;
+  document.getElementById('dialog-panel').classList.remove('hidden');
+}
+
+function closeBossDialog() {
+  document.getElementById('dialog-panel').classList.add('hidden');
+  if (state === 'confronted' && !leaderboardShown) {
+    leaderboardShown = true;
+    state = 'done';
+    showLeaderboard();
   }
 }
+
+document.getElementById('dialog-ok').addEventListener('click', closeBossDialog);
+document.getElementById('dialog-x').addEventListener('click',  closeBossDialog);
 
 // ── leaderboard ──────────────────────────────────────────────────
 const LB_KEY = 'hormuz_lb_v1';
@@ -1087,6 +1408,7 @@ function startGame() {
 
   document.getElementById('start-panel').classList.add('hidden');
   document.getElementById('lb-panel').classList.add('hidden');
+  document.getElementById('dialog-panel').classList.add('hidden');
 }
 
 // ── UI ───────────────────────────────────────────────────────────
