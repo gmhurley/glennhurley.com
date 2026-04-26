@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <title>Strait of Hormuz | Glenn Hurley</title>
+  <link rel="icon" href="/favicon.ico" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100dvh;
+      overflow: hidden;
+      font-family: 'Courier New', Courier, monospace;
+      touch-action: none;
+      user-select: none;
+    }
+
+    #c { display: block; }
+
+    .panel {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 10, 20, 0.90);
+      z-index: 10;
+    }
+    .panel.hidden { display: none; }
+
+    .card {
+      background: #0d1f2d;
+      border: 2px solid #2a5f8f;
+      border-radius: 14px;
+      padding: 24px 20px;
+      width: min(360px, 92vw);
+      color: #e0e8f0;
+      text-align: center;
+    }
+
+    .card h1 {
+      font-size: 1.45rem;
+      letter-spacing: 0.06em;
+      color: #5bc0f8;
+      margin-bottom: 2px;
+    }
+    .tagline {
+      font-size: 0.68rem;
+      color: #557799;
+      margin-bottom: 18px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .flag-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+    .flag-opt {
+      flex: 1;
+      background: #0a1828;
+      border: 2px solid #1e3a52;
+      border-radius: 10px;
+      padding: 10px 6px;
+      cursor: pointer;
+      color: #c0d8f0;
+      transition: border-color .15s, background .15s;
+      font-family: inherit;
+    }
+    .flag-opt .flag-em { font-size: 1.6rem; display: block; line-height: 1; margin-bottom: 5px; }
+    .flag-opt .flag-name { font-size: 0.7rem; font-weight: bold; display: block; }
+    .flag-opt .flag-note { font-size: 0.56rem; color: #445566; margin-top: 4px; line-height: 1.4; }
+    .flag-opt.sel { border-color: #5bc0f8; background: #0a2038; }
+
+    #tanker-name {
+      width: 100%;
+      background: #0a1828;
+      border: 2px solid #1e3a52;
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #e0e8f0;
+      font-family: inherit;
+      font-size: 0.9rem;
+      text-align: center;
+      letter-spacing: 0.08em;
+      margin-bottom: 16px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    #tanker-name:focus { border-color: #5bc0f8; }
+    #tanker-name::placeholder { color: #2a3a4a; }
+
+    .btn-primary {
+      width: 100%;
+      background: #1a508a;
+      border: none;
+      border-radius: 8px;
+      padding: 13px;
+      color: #e0f0ff;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: bold;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-primary:hover { background: #2060a0; }
+    .btn-primary:active { background: #104070; }
+
+    .death-msg {
+      font-size: 0.78rem;
+      color: #cc4444;
+      margin-bottom: 14px;
+      line-height: 1.6;
+      min-height: 2.4em;
+    }
+    .lb-title { font-size: 1.05rem; color: #5bc0f8; margin-bottom: 12px; letter-spacing: .06em; }
+
+    .lb-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; margin-bottom: 18px; }
+    .lb-table th { color: #446677; font-weight: normal; padding: 4px 6px; text-align: left; border-bottom: 1px solid #1e3a52; letter-spacing: .04em; }
+    .lb-table td { padding: 5px 6px; color: #a0c0d8; }
+    .lb-table tr.you td { color: #ffd700; }
+    .lb-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+  </style>
+</head>
+<body>
+
+<div class="panel" id="start-panel">
+  <div class="card">
+    <h1>STRAIT OF HORMUZ</h1>
+    <div class="tagline">navigate the world's most contested chokepoint</div>
+    <div style="font-size:.63rem;color:#334455;margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em;">Select your flag of convenience:</div>
+    <div class="flag-row" id="flag-row">
+      <button class="flag-opt sel" data-idx="0">
+        <span class="flag-em">🇲🇳</span>
+        <span class="flag-name">MONGOLIA</span>
+        <div class="flag-note">Landlocked<br>since forever</div>
+      </button>
+      <button class="flag-opt" data-idx="1">
+        <span class="flag-em">🇲🇭</span>
+        <span class="flag-name">MARSHALL IS.</span>
+        <div class="flag-note">Currently<br>sinking</div>
+      </button>
+      <button class="flag-opt" data-idx="2">
+        <span class="flag-em">🇹🇻</span>
+        <span class="flag-name">TUVALU</span>
+        <div class="flag-note">Pop. 11,000.<br>Mostly fish.</div>
+      </button>
+    </div>
+    <input type="text" id="tanker-name" placeholder="NAME YOUR TANKER" maxlength="22"
+           autocomplete="off" spellcheck="false" autocapitalize="characters" />
+    <button class="btn-primary" id="deploy-btn">⚓ DEPLOY</button>
+  </div>
+</div>
+
+<div class="panel hidden" id="lb-panel">
+  <div class="card">
+    <div class="death-msg" id="death-msg"></div>
+    <div class="lb-title">HALL OF FALLEN TANKERS</div>
+    <table class="lb-table">
+      <thead><tr><th>#</th><th>TANKER</th><th>NM</th><th>DATE</th></tr></thead>
+      <tbody id="lb-body"></tbody>
+    </table>
+    <button class="btn-primary" id="replay-btn">⚓ REDEPLOY</button>
+  </div>
+</div>
+
+<canvas id="c"></canvas>
+
+<script>
+'use strict';
+
+// ── canvas / scaling ────────────────────────────────────────────
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+const LW = 400, LH = 720;
+
+function fitCanvas() {
+  const s = Math.min(window.innerWidth / LW, window.innerHeight / LH);
+  canvas.width  = LW;
+  canvas.height = LH;
+  canvas.style.width  = Math.floor(LW * s) + 'px';
+  canvas.style.height = Math.floor(LH * s) + 'px';
+}
+window.addEventListener('resize', fitCanvas);
+fitCanvas();
+
+// ── constants ───────────────────────────────────────────────────
+const SHORE_W   = 46;
+const WATER_L   = SHORE_W;
+const WATER_R   = LW - SHORE_W;
+const WATER_W   = WATER_R - WATER_L;
+const TW = 36, TH = 80;
+const PLAYER_Y  = LH * 0.72;
+const PLAYER_SPD = 230;
+const BASE_SCROLL = 110;
+const MAX_SCROLL  = 310;
+const SCROLL_ACCEL = 5;
+const NM_PX = 180;
+const BOSS_THRESHOLD = 100;
+const BOSS_RANDOM    = 50;
+
+// ── flags ───────────────────────────────────────────────────────
+const FLAGS = [
+  { emoji: '🇲🇳', name: 'Mongolia' },
+  { emoji: '🇲🇭', name: 'Marshall Islands' },
+  { emoji: '🇹🇻', name: 'Tuvalu' },
+];
+
+// ── game state ──────────────────────────────────────────────────
+let state        = 'idle';
+let scrollSpeed  = BASE_SCROLL;
+let scrollY      = 0;
+let distance     = 0;
+let selectedFlag = 0;
+let tankerName   = 'MV CRUDE JUSTICE';
+let deathReason  = '';
+let dyingTimer   = 0;
+let eatenTimer   = 0;
+let leaderboardShown = false;
+
+let player    = { x: LW / 2, y: PLAYER_Y };
+let obstacles = [];
+let particles = [];
+let spawnClock    = 0;
+let spawnInterval = 1.8;
+let boss          = null;
+let bossSpawned   = false;
+let bossTarget    = BOSS_THRESHOLD;
+
+// ── input ───────────────────────────────────────────────────────
+const keys   = { left: false, right: false };
+const touch  = { left: false, right: false };
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft'  || e.key === 'a' || e.key === 'A') keys.left  = true;
+  if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
+});
+document.addEventListener('keyup', e => {
+  if (e.key === 'ArrowLeft'  || e.key === 'a' || e.key === 'A') keys.left  = false;
+  if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+});
+
+function touchSide(clientX) {
+  const rect = canvas.getBoundingClientRect();
+  const x = (clientX - rect.left) / rect.width * LW;
+  return x < LW / 2 ? 'left' : 'right';
+}
+
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  for (const t of e.changedTouches) touch[touchSide(t.clientX)] = true;
+}, { passive: false });
+
+canvas.addEventListener('touchend', e => {
+  e.preventDefault();
+  touch.left = touch.right = false;
+  for (const t of e.touches) touch[touchSide(t.clientX)] = true;
+}, { passive: false });
+
+canvas.addEventListener('touchcancel', () => { touch.left = touch.right = false; });
+
+canvas.addEventListener('mousedown', e => { touch[touchSide(e.clientX)] = true; });
+window.addEventListener('mouseup',   () => { touch.left = touch.right = false; });
+
+// ── obstacle definitions ─────────────────────────────────────────
+const OBS = [
+  { id: 'mine',    label: 'MINE',      color: '#9a6010', r: 18, baseSpeed:   0, pattern: 'drift',  weight: 3 },
+  { id: 'boat',    label: 'SPEEDBOAT', color: '#cc3300', r: 11, baseSpeed: 170, pattern: 'zigzag', weight: 3 },
+  { id: 'drone',   label: 'DRONE',     color: '#cc7700', r: 10, baseSpeed:  90, pattern: 'sine',   weight: 2 },
+  { id: 'missile', label: 'MISSILE',   color: '#ff2200', r:  7, baseSpeed: 210, pattern: 'homing', weight: 2 },
+];
+
+function pickType() {
+  const progress = Math.min(distance / (BOSS_THRESHOLD * NM_PX), 1);
+  const pool = [];
+  for (const t of OBS) {
+    let w = t.weight;
+    if (t.id === 'missile' || t.id === 'drone') w += progress * 3;
+    for (let i = 0; i < Math.round(w); i++) pool.push(t);
+  }
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function spawnObs() {
+  const def = pickType();
+  const margin = SHORE_W + def.r + 6;
+  obstacles.push({
+    type: def,
+    x: margin + Math.random() * (LW - margin * 2),
+    y: -def.r - 10,
+    vx: (Math.random() - 0.5) * 40,
+    vy: def.baseSpeed,
+    phase: Math.random() * Math.PI * 2,
+    driftDir: Math.random() < 0.5 ? 1 : -1,
+    driftClock: 0,
+    age: 0,
+    r: def.r,
+  });
+}
+
+// ── particles ────────────────────────────────────────────────────
+function boom(x, y, color, n = 14) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const spd = 70 + Math.random() * 200;
+    particles.push({ x, y, vx: Math.cos(a)*spd, vy: Math.sin(a)*spd,
+                     r: 2 + Math.random() * 5, life: 0.5 + Math.random() * 0.5,
+                     age: 0, color });
+  }
+}
+
+// ── draw helpers ─────────────────────────────────────────────────
+function drawWater() {
+  ctx.fillStyle = '#0c2540';
+  ctx.fillRect(WATER_L, 0, WATER_W, LH);
+
+  ctx.save();
+  const sp = scrollY % 32;
+  ctx.strokeStyle = 'rgba(100,180,255,0.05)';
+  ctx.lineWidth = 1;
+  for (let y = -32 + sp; y < LH + 32; y += 32) {
+    ctx.beginPath();
+    for (let x = WATER_L; x <= WATER_R; x += 5) {
+      const wx = Math.sin(x * 0.025 + y * 0.018) * 3;
+      x === WATER_L ? ctx.moveTo(x, y + wx) : ctx.lineTo(x, y + wx);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawShores() {
+  // UAE/Oman — left (sandy tan)
+  const lg = ctx.createLinearGradient(0, 0, SHORE_W, 0);
+  lg.addColorStop(0, '#d4aa60');
+  lg.addColorStop(1, '#a07840');
+  ctx.fillStyle = lg;
+  ctx.fillRect(0, 0, SHORE_W, LH);
+
+  // Iran — right (terracotta)
+  const rg = ctx.createLinearGradient(WATER_R, 0, LW, 0);
+  rg.addColorStop(0, '#904828');
+  rg.addColorStop(1, '#c06040');
+  ctx.fillStyle = rg;
+  ctx.fillRect(WATER_R, 0, SHORE_W, LH);
+
+  // shore edge lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(SHORE_W, 0); ctx.lineTo(SHORE_W, LH); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(WATER_R, 0); ctx.lineTo(WATER_R, LH); ctx.stroke();
+
+  // labels
+  ctx.save();
+  ctx.font = 'bold 9px Courier New';
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.textAlign = 'center';
+
+  ctx.save();
+  ctx.translate(SHORE_W / 2, LH / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText('OMAN / UAE', 0, 0);
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(WATER_R + SHORE_W / 2, LH / 2);
+  ctx.rotate(Math.PI / 2);
+  ctx.fillText('I  R  A  N', 0, 0);
+  ctx.restore();
+
+  ctx.restore();
+}
+
+function drawTanker(x, y, flagEmoji, alpha) {
+  ctx.save();
+  if (alpha !== undefined) ctx.globalAlpha = alpha;
+  ctx.translate(x, y);
+
+  const hw = TW / 2, hh = TH / 2;
+
+  // wake
+  const wg = ctx.createLinearGradient(0, hh, 0, hh + 44);
+  wg.addColorStop(0, 'rgba(255,255,255,0.15)');
+  wg.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = wg;
+  ctx.beginPath();
+  ctx.moveTo(-hw, hh);
+  ctx.lineTo(-hw - 12, hh + 44);
+  ctx.lineTo(hw + 12, hh + 44);
+  ctx.lineTo(hw, hh);
+  ctx.closePath();
+  ctx.fill();
+
+  // hull
+  ctx.fillStyle = '#3a3a3a';
+  ctx.beginPath();
+  ctx.moveTo(-hw, hh);
+  ctx.lineTo(hw, hh);
+  ctx.lineTo(hw, -hh + 12);
+  ctx.lineTo(0, -hh);
+  ctx.lineTo(-hw, -hh + 12);
+  ctx.closePath();
+  ctx.fill();
+
+  // waterline stripe
+  ctx.strokeStyle = '#cc2200';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(-hw, hh - 8);
+  ctx.lineTo(hw, hh - 8);
+  ctx.stroke();
+
+  // deck tanks
+  ctx.fillStyle = '#525252';
+  for (const ty of [-28, -14, 0, 14, 28]) {
+    ctx.beginPath();
+    ctx.arc(0, ty, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#404040';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // superstructure
+  ctx.fillStyle = '#4a4a5c';
+  ctx.fillRect(-10, hh - 32, 20, 24);
+  ctx.fillStyle = '#5a5a6e';
+  ctx.fillRect(-7, hh - 30, 14, 10);
+
+  // flag on hull
+  ctx.font = '12px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(flagEmoji, 0, 28);
+
+  ctx.restore();
+}
+
+function drawMine(x, y, r, age) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(age * 0.25);
+
+  ctx.fillStyle = '#8a6012';
+  ctx.strokeStyle = '#4a3208';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    ctx.strokeStyle = '#4a3208';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+    ctx.lineTo(Math.cos(a) * (r + 7), Math.sin(a) * (r + 7));
+    ctx.stroke();
+    ctx.fillStyle = '#ddaa00';
+    ctx.beginPath();
+    ctx.arc(Math.cos(a) * (r + 8), Math.sin(a) * (r + 8), 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+function drawSpeedboat(x, y, r, age) {
+  ctx.save();
+  ctx.translate(x, y);
+
+  ctx.fillStyle = '#cc3300';
+  ctx.beginPath();
+  ctx.moveTo(0, -r * 1.5);
+  ctx.lineTo(r * 0.9, r);
+  ctx.lineTo(-r * 0.9, r);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.5, r); ctx.lineTo(-r - 5, r + 10);
+  ctx.moveTo( r * 0.5, r); ctx.lineTo( r + 5, r + 10);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawDrone(x, y, r, age) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(age * 2);
+
+  ctx.strokeStyle = '#dd8800';
+  ctx.lineWidth = 2.5;
+  const arm = r + 5;
+  for (let i = 0; i < 4; i++) {
+    const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(Math.cos(a) * arm, Math.sin(a) * arm);
+    ctx.stroke();
+    ctx.fillStyle = '#dd8800';
+    ctx.beginPath();
+    ctx.arc(Math.cos(a) * arm, Math.sin(a) * arm, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.fillStyle = '#ee9900';
+  ctx.beginPath();
+  ctx.arc(0, 0, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawMissile(x, y, r, vy, vx) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(Math.atan2(vy, vx) + Math.PI / 2);
+
+  ctx.fillStyle = '#ff2200';
+  ctx.fillRect(-r * 0.55, -r * 2, r * 1.1, r * 3.5);
+
+  ctx.fillStyle = '#ff6600';
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.55, -r * 2);
+  ctx.lineTo(r * 0.55, -r * 2);
+  ctx.lineTo(0, -r * 3.4);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = '#cc1100';
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.55, r * 1.2); ctx.lineTo(-r * 1.5, r * 2.2); ctx.lineTo(-r * 0.55, r * 2.2);
+  ctx.closePath(); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(r * 0.55, r * 1.2); ctx.lineTo(r * 1.5, r * 2.2); ctx.lineTo(r * 0.55, r * 2.2);
+  ctx.closePath(); ctx.fill();
+
+  const eg = ctx.createLinearGradient(0, r * 1.5, 0, r * 3.8);
+  eg.addColorStop(0, 'rgba(255,180,0,0.9)');
+  eg.addColorStop(1, 'rgba(255,80,0,0)');
+  ctx.fillStyle = eg;
+  ctx.beginPath();
+  ctx.ellipse(0, r * 2.4, r * 0.7, r * 1.4, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawBoss(b) {
+  ctx.save();
+  ctx.translate(b.x, b.y);
+
+  const bw = WATER_W + 10, bh = 160;
+
+  // glow
+  const gg = ctx.createRadialGradient(0, 0, 20, 0, 0, bh * 1.2);
+  gg.addColorStop(0, 'rgba(255,215,0,0.25)');
+  gg.addColorStop(1, 'rgba(255,215,0,0)');
+  ctx.fillStyle = gg;
+  ctx.fillRect(-bw / 2 - 40, -bh / 2 - 40, bw + 80, bh + 80);
+
+  // hull
+  ctx.fillStyle = '#b89000';
+  ctx.beginPath();
+  ctx.moveTo(-bw / 2, bh / 2);
+  ctx.lineTo( bw / 2, bh / 2);
+  ctx.lineTo( bw / 2, -bh / 2 + 22);
+  ctx.lineTo(0, -bh / 2);
+  ctx.lineTo(-bw / 2, -bh / 2 + 22);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = '#ffe060';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // deck
+  ctx.fillStyle = '#d0a820';
+  ctx.fillRect(-bw / 2 + 10, -bh / 2 + 22, bw - 20, 40);
+
+  // superstructure
+  ctx.fillStyle = '#c89818';
+  ctx.fillRect(-44, -bh / 2 + 30, 88, 55);
+  ctx.fillStyle = '#dab828';
+  ctx.fillRect(-30, -bh / 2 + 34, 60, 16);
+
+  // gun turrets
+  ctx.fillStyle = '#8a7010';
+  for (const tx of [-90, -46, 0, 46, 90]) {
+    ctx.beginPath();
+    ctx.arc(tx, -bh / 2 + 48, 13, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#706010';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(tx, -bh / 2 + 48);
+    ctx.lineTo(tx, -bh / 2 + 22);
+    ctx.stroke();
+  }
+
+  // star
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 24px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('★', 0, -bh / 2 + 52);
+
+  // name
+  ctx.fillStyle = '#ffe060';
+  ctx.font = 'bold 10px Courier New';
+  ctx.textAlign = 'center';
+  ctx.fillText('USS MANIFEST DESTINY', 0, bh / 2 - 18);
+  ctx.fillStyle = '#cc9900';
+  ctx.font = '9px Courier New';
+  ctx.fillText('(GOLDEN EDITION)', 0, bh / 2 - 6);
+
+  ctx.restore();
+}
+
+function drawHUD() {
+  const nm = Math.floor(distance / NM_PX);
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.fillRect(0, 0, LW, 36);
+  ctx.font = 'bold 11px Courier New';
+  ctx.textBaseline = 'middle';
+
+  ctx.fillStyle = '#5bc0f8';
+  ctx.textAlign = 'left';
+  ctx.fillText(FLAGS[selectedFlag].emoji + ' ' + tankerName.toUpperCase(), 8, 18);
+
+  ctx.textAlign = 'right';
+  ctx.fillText(nm + ' NM', LW - 8, 18);
+  ctx.restore();
+}
+
+function drawParticles() {
+  for (const p of particles) {
+    const a = 1 - p.age / p.life;
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r * a + 0.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+// ── update ───────────────────────────────────────────────────────
+function updateParticles(dt) {
+  for (const p of particles) {
+    p.age += dt;
+    p.x  += p.vx * dt;
+    p.y  += p.vy * dt;
+    p.vy += 50 * dt;
+  }
+  particles = particles.filter(p => p.age < p.life);
+}
+
+function updateObs(o, dt) {
+  o.age += dt;
+  o.y += (o.vy + scrollSpeed) * dt;
+
+  switch (o.type.pattern) {
+    case 'drift':
+      o.driftClock += dt;
+      if (o.driftClock > 1.6) { o.driftDir *= -1; o.driftClock = 0; }
+      o.x += o.driftDir * 20 * dt;
+      break;
+    case 'zigzag':
+      o.vx = Math.sin(o.age * 3 + o.phase) * 160;
+      o.x += o.vx * dt;
+      break;
+    case 'sine':
+      o.x += Math.sin(o.age * 2 + o.phase) * 130 * dt;
+      break;
+    case 'homing': {
+      const dx = player.x - o.x;
+      o.vx += dx * 1.5 * dt;
+      o.vx = Math.max(-180, Math.min(180, o.vx));
+      o.x += o.vx * dt;
+      break;
+    }
+  }
+
+  const m = SHORE_W + o.r + 2;
+  o.x = Math.max(m, Math.min(LW - m, o.x));
+}
+
+function hits(o) {
+  const dx = o.x - player.x;
+  const dy = o.y - player.y;
+  return Math.sqrt(dx * dx + dy * dy) < o.r + Math.min(TW, TH) * 0.36;
+}
+
+function update(dt) {
+  if (state === 'idle' || state === 'done') return;
+
+  updateParticles(dt);
+
+  if (state === 'dying') {
+    dyingTimer += dt;
+    if (dyingTimer > 2 && !leaderboardShown) {
+      leaderboardShown = true;
+      state = 'done';
+      showLeaderboard();
+    }
+    return;
+  }
+
+  if (state === 'eaten') {
+    eatenTimer += dt;
+    if (boss) { boss.timer += dt; boss.y += boss.vy * dt; }
+    if (eatenTimer > 3.5 && !leaderboardShown) {
+      leaderboardShown = true;
+      state = 'done';
+      showLeaderboard();
+    }
+    return;
+  }
+
+  // state === 'playing'
+  scrollSpeed = Math.min(scrollSpeed + SCROLL_ACCEL * dt, MAX_SCROLL);
+  scrollY    += scrollSpeed * dt;
+  distance   += scrollSpeed * dt;
+
+  spawnInterval = Math.max(0.55, 1.8 - (distance / NM_PX) * 0.005);
+  spawnClock += dt;
+  if (spawnClock >= spawnInterval) {
+    spawnClock = 0;
+    spawnObs();
+    if (distance > 50 * NM_PX && Math.random() < 0.28) spawnObs();
+  }
+
+  for (const o of obstacles) updateObs(o, dt);
+  obstacles = obstacles.filter(o => o.y < LH + 60);
+
+  // player movement
+  const goL = keys.left  || touch.left;
+  const goR = keys.right || touch.right;
+  if (goL) player.x -= PLAYER_SPD * dt;
+  if (goR) player.x += PLAYER_SPD * dt;
+  player.x = Math.max(SHORE_W + TW / 2 + 2, Math.min(WATER_R - TW / 2 - 2, player.x));
+
+  // boss spawn
+  if (!bossSpawned && distance / NM_PX >= bossTarget) {
+    bossSpawned = true;
+    boss = { x: LW / 2, y: -170, vy: 45, timer: 0 };
+  }
+
+  // boss movement
+  if (boss) {
+    boss.timer += dt;
+    boss.vy = Math.min(boss.vy + 10 * dt, 220);
+    boss.y  += boss.vy * dt;
+
+    if (boss.y + 80 > player.y - TH / 2) {
+      state = 'eaten';
+      eatenTimer = 0;
+      leaderboardShown = false;
+      deathReason = tankerName.toUpperCase() + ' WAS NEUTRALIZED BY USS MANIFEST DESTINY (GOLDEN EDITION).';
+      boom(player.x, player.y, '#FFD700', 22);
+      boom(player.x, player.y, '#ff6600', 16);
+    }
+  }
+
+  // obstacle collisions
+  for (const o of obstacles) {
+    if (hits(o)) {
+      state = 'dying';
+      dyingTimer = 0;
+      leaderboardShown = false;
+      deathReason = tankerName.toUpperCase() + ' STRUCK A ' + o.type.label + ' AND SANK IN THE STRAIT.';
+      boom(player.x, player.y, '#ff6600', 18);
+      boom(o.x, o.y, '#ffcc00', 12);
+      break;
+    }
+  }
+}
+
+// ── draw ─────────────────────────────────────────────────────────
+function draw() {
+  ctx.clearRect(0, 0, LW, LH);
+  drawWater();
+  drawShores();
+
+  for (const o of obstacles) {
+    switch (o.type.id) {
+      case 'mine':    drawMine(o.x, o.y, o.r, o.age); break;
+      case 'boat':    drawSpeedboat(o.x, o.y, o.r, o.age); break;
+      case 'drone':   drawDrone(o.x, o.y, o.r, o.age); break;
+      case 'missile': drawMissile(o.x, o.y, o.r, o.vy + scrollSpeed, o.vx); break;
+    }
+    // label fades in briefly
+    if (o.age < 1.2) {
+      const la = Math.min(o.age * 3, 1) * (1 - Math.max(0, (o.age - 0.8) / 0.4));
+      ctx.save();
+      ctx.globalAlpha = la;
+      ctx.fillStyle = o.type.color;
+      ctx.font = '8px Courier New';
+      ctx.textAlign = 'center';
+      ctx.fillText(o.type.label, o.x, o.y - o.r - 5);
+      ctx.restore();
+    }
+  }
+
+  if (boss) drawBoss(boss);
+  drawParticles();
+
+  // tanker — fades on death
+  const dead = state === 'dying' || state === 'eaten';
+  drawTanker(player.x, player.y, FLAGS[selectedFlag].emoji, dead ? 0.25 : 1);
+
+  if (state !== 'idle' && state !== 'done') drawHUD();
+
+  // boss warning
+  if (boss && state === 'playing' && boss.y < 0) {
+    const bt = boss.timer;
+    if (Math.sin(bt * 9) > 0) {
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, bt * 2);
+      ctx.fillStyle = '#ffd700';
+      ctx.font = 'bold 12px Courier New';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('⚠  USS MANIFEST DESTINY DETECTED  ⚠', LW / 2, 56);
+      ctx.restore();
+    }
+  }
+
+  // eaten overlay
+  if (state === 'eaten') {
+    const a = Math.min(1, eatenTimer * 0.5);
+    ctx.save();
+    ctx.globalAlpha = a * 0.72;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, LW, LH);
+    ctx.globalAlpha = a;
+    ctx.fillStyle = '#FFD700';
+    ctx.font = 'bold 18px Courier New';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('NEUTRALIZED', LW / 2, LH / 2 - 14);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '11px Courier New';
+    ctx.fillText('BY USS MANIFEST DESTINY', LW / 2, LH / 2 + 12);
+    ctx.font = '9px Courier New';
+    ctx.fillStyle = '#888';
+    ctx.fillText('(GOLDEN EDITION)', LW / 2, LH / 2 + 28);
+    ctx.restore();
+  }
+}
+
+// ── leaderboard ──────────────────────────────────────────────────
+const LB_KEY = 'hormuz_lb_v1';
+
+function getLB() {
+  try { return JSON.parse(localStorage.getItem(LB_KEY)) || []; } catch { return []; }
+}
+
+function saveLB(entry) {
+  let lb = getLB();
+  lb.push(entry);
+  lb.sort((a, b) => b.nm - a.nm);
+  lb = lb.slice(0, 10);
+  localStorage.setItem(LB_KEY, JSON.stringify(lb));
+  return lb;
+}
+
+function showLeaderboard() {
+  const nm = Math.floor(distance / NM_PX);
+  const entry = {
+    name: tankerName,
+    flag: FLAGS[selectedFlag].emoji,
+    nm,
+    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+  };
+  const lb = saveLB(entry);
+
+  document.getElementById('death-msg').textContent = deathReason;
+
+  const tbody = document.getElementById('lb-body');
+  tbody.innerHTML = '';
+  lb.forEach((e, i) => {
+    const tr = document.createElement('tr');
+    if (e.name === tankerName && e.nm === nm) tr.className = 'you';
+    tr.innerHTML =
+      `<td>${i + 1}</td><td>${e.flag} ${e.name}</td><td>${e.nm}</td><td>${e.date}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('lb-panel').classList.remove('hidden');
+}
+
+// ── game init ────────────────────────────────────────────────────
+function startGame() {
+  state        = 'playing';
+  scrollSpeed  = BASE_SCROLL;
+  scrollY      = 0;
+  distance     = 0;
+  obstacles    = [];
+  particles    = [];
+  spawnClock   = 0;
+  spawnInterval = 1.8;
+  player       = { x: LW / 2, y: PLAYER_Y };
+  boss         = null;
+  bossSpawned  = false;
+  bossTarget   = BOSS_THRESHOLD + Math.random() * BOSS_RANDOM;
+  dyingTimer   = 0;
+  eatenTimer   = 0;
+  leaderboardShown = false;
+  deathReason  = '';
+
+  document.getElementById('start-panel').classList.add('hidden');
+  document.getElementById('lb-panel').classList.add('hidden');
+}
+
+// ── UI ───────────────────────────────────────────────────────────
+document.getElementById('flag-row').addEventListener('click', e => {
+  const btn = e.target.closest('[data-idx]');
+  if (!btn) return;
+  selectedFlag = parseInt(btn.dataset.idx);
+  document.querySelectorAll('.flag-opt').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+});
+
+document.getElementById('deploy-btn').addEventListener('click', () => {
+  const v = document.getElementById('tanker-name').value.trim();
+  tankerName = v || 'MV CRUDE JUSTICE';
+  startGame();
+});
+
+document.getElementById('tanker-name').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('deploy-btn').click();
+});
+
+document.getElementById('replay-btn').addEventListener('click', () => {
+  document.getElementById('lb-panel').classList.add('hidden');
+  document.getElementById('start-panel').classList.remove('hidden');
+  state = 'idle';
+});
+
+// ── loop ─────────────────────────────────────────────────────────
+let lastTs = 0;
+function loop(ts) {
+  const dt = Math.min((ts - lastTs) / 1000, 0.05);
+  lastTs = ts;
+  update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
