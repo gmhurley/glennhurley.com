@@ -283,7 +283,7 @@
     <div class="death-msg" id="death-msg"></div>
     <div class="lb-title">HALL OF FALLEN TANKERS</div>
     <table class="lb-table">
-      <thead><tr><th>#</th><th>TANKER</th><th>NM</th><th>DATE</th></tr></thead>
+      <thead><tr><th>#</th><th>TANKER</th><th>NM</th><th>DMG</th><th>DATE</th></tr></thead>
       <tbody id="lb-body"></tbody>
     </table>
     <button class="btn-primary" id="replay-btn">⚓ REDEPLOY</button>
@@ -340,8 +340,16 @@ const BASE_SCROLL = 110;
 const MAX_SCROLL  = 310;
 const SCROLL_ACCEL = 5;
 const NM_PX = 180;
-const BOSS_THRESHOLD = 100;
-const BOSS_RANDOM    = 50;
+const FINISH_NM = 100;          // strait length — game ends here
+const HIT_INVUL = 0.7;          // seconds of invulnerability after a non-fatal hit
+
+// damage per obstacle type (out of 100)
+const DMG = {
+  mine:    100,   // contact mine = ship-killer
+  missile:  45,
+  drone:    25,
+  boat:     12,   // ramming damage from a fast boat
+};
 
 // ── flags ───────────────────────────────────────────────────────
 const FLAGS = [
@@ -365,11 +373,15 @@ let leaderboardShown = false;
 let player    = { x: LW / 2, y: PLAYER_Y };
 let obstacles = [];
 let particles = [];
+let bullets   = [];
 let spawnClock    = 0;
 let spawnInterval = 1.8;
 let boss          = null;
 let bossSpawned   = false;
-let bossTarget    = BOSS_THRESHOLD;
+let bossTarget    = FINISH_NM;
+let damage        = 0;
+let invulTimer    = 0;
+let hitFlash      = 0;
 
 // ── input ───────────────────────────────────────────────────────
 const keys   = { left: false, right: false };
@@ -427,7 +439,7 @@ function pickType() {
 
 function spawnObs() {
   const def = pickType();
-  const margin = SHORE_W + def.r + 6;
+  const margin = SHORE_W + def.r + 24;
   obstacles.push({
     type: def,
     x: margin + Math.random() * (LW - margin * 2),
@@ -439,6 +451,24 @@ function spawnObs() {
     driftClock: 0,
     age: 0,
     r: def.r,
+    shootClock: def.id === 'boat' ? 0.6 + Math.random() * 0.6 : 0,
+    dead: false,
+  });
+}
+
+function fireBullet(o) {
+  // aim toward the tanker but always miss — these are warning shots
+  const ang0 = Math.atan2(player.y - o.y, player.x - o.x);
+  const miss = (Math.random() < 0.5 ? -1 : 1) * (0.16 + Math.random() * 0.12);
+  const ang  = ang0 + miss;
+  const spd  = 420;
+  bullets.push({
+    x: o.x,
+    y: o.y + 14,           // muzzle of the foredeck gun
+    vx: Math.cos(ang) * spd,
+    vy: Math.sin(ang) * spd,
+    age: 0,
+    life: 1.4,
   });
 }
 
@@ -473,44 +503,212 @@ function drawWater() {
   ctx.restore();
 }
 
+// ── shore geometry (wavy, scrolls with the strait) ──────────────
+function shoreLeftAt(screenY) {
+  const wy = screenY - scrollY;
+  return SHORE_W + Math.sin(wy * 0.0085 + 0.4) * 14
+                 + Math.sin(wy * 0.024  + 1.7) * 7;
+}
+function shoreRightAt(screenY) {
+  const wy = screenY - scrollY;
+  return LW - SHORE_W - Math.sin(wy * 0.0095 + 1.2) * 14
+                       - Math.sin(wy * 0.027  + 4.1) * 7;
+}
+
+function _hash01(n) {
+  n = (Math.sin(n * 12.9898) * 43758.5453);
+  return n - Math.floor(n);
+}
+
 function drawShores() {
-  // UAE/Oman — left (sandy tan)
-  const lg = ctx.createLinearGradient(0, 0, SHORE_W, 0);
-  lg.addColorStop(0, '#d4aa60');
-  lg.addColorStop(1, '#a07840');
-  ctx.fillStyle = lg;
-  ctx.fillRect(0, 0, SHORE_W, LH);
+  const step = 4;
 
-  // Iran — right (terracotta)
-  const rg = ctx.createLinearGradient(WATER_R, 0, LW, 0);
-  rg.addColorStop(0, '#904828');
-  rg.addColorStop(1, '#c06040');
-  ctx.fillStyle = rg;
-  ctx.fillRect(WATER_R, 0, SHORE_W, LH);
+  // base land — left (sandy tan)
+  const llg = ctx.createLinearGradient(0, 0, SHORE_W * 1.4, 0);
+  llg.addColorStop(0, '#7a5028');
+  llg.addColorStop(1, '#c89058');
+  ctx.fillStyle = llg;
+  ctx.beginPath();
+  ctx.moveTo(0, -step);
+  for (let y = -step; y <= LH + step; y += step) ctx.lineTo(shoreLeftAt(y), y);
+  ctx.lineTo(0, LH + step);
+  ctx.closePath();
+  ctx.fill();
 
-  // shore edge lines
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-  ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(SHORE_W, 0); ctx.lineTo(SHORE_W, LH); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(WATER_R, 0); ctx.lineTo(WATER_R, LH); ctx.stroke();
+  // base land — right (terracotta)
+  const rlg = ctx.createLinearGradient(WATER_R - 6, 0, LW, 0);
+  rlg.addColorStop(0, '#a85030');
+  rlg.addColorStop(1, '#722810');
+  ctx.fillStyle = rlg;
+  ctx.beginPath();
+  ctx.moveTo(LW, -step);
+  for (let y = -step; y <= LH + step; y += step) ctx.lineTo(shoreRightAt(y), y);
+  ctx.lineTo(LW, LH + step);
+  ctx.closePath();
+  ctx.fill();
 
-  // labels
+  // beach strip (lighter sand near the water on the left shore)
+  ctx.fillStyle = '#dcb478';
+  ctx.beginPath();
+  for (let y = -step; y <= LH + step; y += step) {
+    const sx = shoreLeftAt(y);
+    if (y === -step) ctx.moveTo(sx, y);
+    else ctx.lineTo(sx, y);
+  }
+  for (let y = LH + step; y >= -step; y -= step) {
+    ctx.lineTo(shoreLeftAt(y) - 6, y);
+  }
+  ctx.closePath();
+  ctx.fill();
+
+  // dry mud / cracked earth strip on the right (Iranian) shore
+  ctx.fillStyle = '#c46a44';
+  ctx.beginPath();
+  for (let y = -step; y <= LH + step; y += step) {
+    const sx = shoreRightAt(y);
+    if (y === -step) ctx.moveTo(sx, y);
+    else ctx.lineTo(sx, y);
+  }
+  for (let y = LH + step; y >= -step; y -= step) {
+    ctx.lineTo(shoreRightAt(y) + 6, y);
+  }
+  ctx.closePath();
+  ctx.fill();
+
+  // surf line — moving foam at the water's edge
+  ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+  ctx.lineWidth = 1.3;
+  ctx.beginPath();
+  for (let y = 0; y <= LH; y += 3) {
+    const sx = shoreLeftAt(y);
+    const wob = Math.sin((y + scrollY) * 0.35) * 0.7;
+    y === 0 ? ctx.moveTo(sx + wob, y) : ctx.lineTo(sx + wob, y);
+  }
+  ctx.stroke();
+  ctx.beginPath();
+  for (let y = 0; y <= LH; y += 3) {
+    const sx = shoreRightAt(y);
+    const wob = Math.sin((y + scrollY) * 0.31 + 2) * 0.7;
+    y === 0 ? ctx.moveTo(sx + wob, y) : ctx.lineTo(sx + wob, y);
+  }
+  ctx.stroke();
+
+  // shore decorations + labels
+  drawShoreDetails();
+  drawShoreLabels();
+}
+
+function drawShoreDetails() {
+  const SP = 50;
+  const minWY = Math.floor((-40 - scrollY) / SP) * SP;
+  const maxWY = Math.ceil ((LH + 40 - scrollY) / SP) * SP;
+
+  for (let wy = minWY; wy <= maxWY; wy += SP) {
+    const sy = wy + scrollY;
+    if (sy < -20 || sy > LH + 20) continue;
+
+    // LEFT (Oman/UAE)
+    {
+      const ht = _hash01(wy * 0.137 + 13);
+      const hp = _hash01(wy * 0.091 + 21);
+      const sx = shoreLeftAt(sy) - 10 - hp * (SHORE_W * 0.6);
+      if (sx > 5) drawShoreObj(sx, sy, ht, 'left', wy);
+    }
+    // RIGHT (Iran)
+    {
+      const ht = _hash01(wy * 0.183 + 41);
+      const hp = _hash01(wy * 0.127 + 71);
+      const sx = shoreRightAt(sy) + 10 + hp * (SHORE_W * 0.6);
+      if (sx < LW - 5) drawShoreObj(sx, sy, ht, 'right', wy);
+    }
+  }
+}
+
+function drawShoreObj(x, y, t, side, wy) {
   ctx.save();
-  ctx.font = 'bold 9px Courier New';
-  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.translate(x, y);
+
+  if (t < 0.42) {
+    // palm tree (top-down — fronds spreading from a small trunk)
+    ctx.strokeStyle = '#3a6520';
+    ctx.lineWidth = 1.4;
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2 + _hash01(wy + i) * 0.4;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(a) * 5, Math.sin(a) * 5);
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#5a3818';
+    ctx.beginPath(); ctx.arc(0, 0, 1.6, 0, Math.PI * 2); ctx.fill();
+    // shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.beginPath(); ctx.arc(1, 1, 5, 0, Math.PI * 2); ctx.fill();
+  } else if (t < 0.78) {
+    // rocks — small cluster
+    ctx.fillStyle = side === 'left' ? '#7a5028' : '#5a2818';
+    ctx.beginPath(); ctx.arc(0, 0, 3.2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = side === 'left' ? '#a07a48' : '#7a3820';
+    ctx.beginPath(); ctx.arc(2, 1, 1.8, 0, Math.PI * 2); ctx.fill();
+    if (_hash01(wy * 0.5 + 7) < 0.5) {
+      ctx.fillStyle = side === 'left' ? '#603a18' : '#421808';
+      ctx.beginPath(); ctx.arc(-2, 2, 1.4, 0, Math.PI * 2); ctx.fill();
+    }
+  } else {
+    // small building (whitewashed hut on Oman side, terracotta on Iran side)
+    ctx.fillStyle = side === 'left' ? '#ece4c8' : '#c46838';
+    ctx.fillRect(-4, -3, 8, 7);
+    // flat roof
+    ctx.fillStyle = side === 'left' ? '#a87838' : '#722810';
+    ctx.fillRect(-4, -3, 8, 1.5);
+    // door
+    ctx.fillStyle = '#222';
+    ctx.fillRect(-1, 1, 2, 3);
+  }
+
+  ctx.restore();
+}
+
+function drawShoreLabels() {
+  const SP = 220;
+  const startWY = Math.floor((-40 - scrollY) / SP) * SP;
+  const endWY   = Math.ceil ((LH + 40 - scrollY) / SP) * SP;
+
+  ctx.save();
+  ctx.font = 'bold 13px Courier New';
   ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
 
-  ctx.save();
-  ctx.translate(SHORE_W / 2, LH / 2);
-  ctx.rotate(-Math.PI / 2);
-  ctx.fillText('OMAN / UAE', 0, 0);
-  ctx.restore();
+  for (let wy = startWY; wy <= endWY; wy += SP) {
+    const sy = wy + scrollY;
+    if (sy < 70 || sy > LH - 60) continue;
 
-  ctx.save();
-  ctx.translate(WATER_R + SHORE_W / 2, LH / 2);
-  ctx.rotate(Math.PI / 2);
-  ctx.fillText('I  R  A  N', 0, 0);
-  ctx.restore();
+    // LEFT — OMAN / UAE  (centered in the visible left land width)
+    ctx.save();
+    ctx.translate(shoreLeftAt(sy) * 0.5, sy);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillStyle = 'rgba(0,0,0,0.65)';
+    ctx.fillText('OMAN / UAE',  1, 1);
+    ctx.fillText('OMAN / UAE', -1, 1);
+    ctx.fillText('OMAN / UAE',  1,-1);
+    ctx.fillText('OMAN / UAE', -1,-1);
+    ctx.fillStyle = '#fff2d8';
+    ctx.fillText('OMAN / UAE', 0, 0);
+    ctx.restore();
+
+    // RIGHT — IRAN  (centered in the visible right land width)
+    ctx.save();
+    ctx.translate((LW + shoreRightAt(sy)) * 0.5, sy);
+    ctx.rotate(Math.PI / 2);
+    ctx.fillStyle = 'rgba(0,0,0,0.65)';
+    ctx.fillText('I R A N',  1, 1);
+    ctx.fillText('I R A N', -1, 1);
+    ctx.fillText('I R A N',  1,-1);
+    ctx.fillText('I R A N', -1,-1);
+    ctx.fillStyle = '#ffe0c0';
+    ctx.fillText('I R A N', 0, 0);
+    ctx.restore();
+  }
 
   ctx.restore();
 }
@@ -1109,18 +1307,80 @@ function drawBoss(b) {
 
 function drawHUD() {
   const nm = Math.floor(distance / NM_PX);
+  const HUD_H = 46;
+
   ctx.save();
-  ctx.fillStyle = 'rgba(0,0,0,0.55)';
-  ctx.fillRect(0, 0, LW, 36);
-  ctx.font = 'bold 11px Courier New';
+  // background bar
+  const hg = ctx.createLinearGradient(0, 0, 0, HUD_H);
+  hg.addColorStop(0, 'rgba(0,0,0,0.7)');
+  hg.addColorStop(1, 'rgba(0,0,0,0.35)');
+  ctx.fillStyle = hg;
+  ctx.fillRect(0, 0, LW, HUD_H);
+  // bottom border
+  ctx.strokeStyle = 'rgba(91,192,248,0.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, HUD_H); ctx.lineTo(LW, HUD_H); ctx.stroke();
+
   ctx.textBaseline = 'middle';
 
+  // top row — tanker name (left) and NM (right)
+  ctx.font = 'bold 11px Courier New';
   ctx.fillStyle = '#5bc0f8';
   ctx.textAlign = 'left';
-  ctx.fillText(FLAGS[selectedFlag].emoji + ' ' + tankerName.toUpperCase(), 8, 18);
+  ctx.fillText(FLAGS[selectedFlag].emoji + ' ' + tankerName.toUpperCase(), 8, 13);
 
   ctx.textAlign = 'right';
-  ctx.fillText(nm + ' NM', LW - 8, 18);
+  const nmStr = nm + ' / ' + FINISH_NM + ' NM';
+  ctx.fillStyle = nm >= FINISH_NM ? '#ffd700' : '#5bc0f8';
+  ctx.fillText(nmStr, LW - 8, 13);
+
+  // distance progress bar (under NM, right-aligned)
+  const pbW = 150, pbH = 5, pbX = LW - 8 - pbW, pbY = 32;
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  ctx.fillRect(pbX, pbY, pbW, pbH);
+  ctx.fillStyle = '#2a7fbf';
+  ctx.fillRect(pbX, pbY, pbW * (distance / (FINISH_NM * NM_PX)), pbH);
+  ctx.strokeStyle = 'rgba(91,192,248,0.4)';
+  ctx.strokeRect(pbX + 0.5, pbY + 0.5, pbW - 1, pbH - 1);
+
+  // damage meter (left, under name)
+  const dmgW = 150, dmgH = 9, dmgX = 8, dmgY = 30;
+  // label
+  ctx.font = 'bold 8px Courier New';
+  ctx.fillStyle = '#88a4b8';
+  ctx.textAlign = 'left';
+  ctx.fillText('HULL', dmgX, dmgY + dmgH / 2);
+  const barX = dmgX + 28;
+
+  // back
+  ctx.fillStyle = '#0a1620';
+  ctx.fillRect(barX, dmgY, dmgW, dmgH);
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  ctx.strokeRect(barX + 0.5, dmgY + 0.5, dmgW - 1, dmgH - 1);
+
+  // fill
+  const dmgPct = damage / 100;
+  let dmgCol = '#22cc44';
+  if (dmgPct > 0.4) dmgCol = '#ddaa00';
+  if (dmgPct > 0.7) dmgCol = '#cc3300';
+  // fill from RIGHT toward left as damage rises (hull is "depleted")
+  const remW = dmgW * (1 - dmgPct);
+  ctx.fillStyle = dmgCol;
+  ctx.fillRect(barX, dmgY, remW, dmgH);
+  // segment ticks every 10%
+  ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+  ctx.lineWidth = 1;
+  for (let i = 1; i < 10; i++) {
+    const tx = barX + (dmgW * i / 10);
+    ctx.beginPath(); ctx.moveTo(tx, dmgY); ctx.lineTo(tx, dmgY + dmgH); ctx.stroke();
+  }
+
+  // damage % text
+  ctx.font = 'bold 8px Courier New';
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'right';
+  ctx.fillText(Math.floor(100 - damage) + '%', barX + dmgW - 3, dmgY + dmgH / 2 + 0.5);
+
   ctx.restore();
 }
 
@@ -1133,6 +1393,29 @@ function drawParticles() {
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.r * a + 0.5, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
+  }
+}
+
+function drawBullets() {
+  for (const b of bullets) {
+    const a = 1 - b.age / b.life;
+    const tx = b.x - b.vx * 0.022;
+    const ty = b.y - b.vy * 0.022;
+    ctx.save();
+    ctx.globalAlpha = a * 0.5;
+    ctx.strokeStyle = '#ffcc40';
+    ctx.lineWidth = 5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(b.x, b.y); ctx.lineTo(tx, ty);
+    ctx.stroke();
+    ctx.globalAlpha = a;
+    ctx.strokeStyle = '#fff8a0';
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(b.x, b.y); ctx.lineTo(tx, ty);
+    ctx.stroke();
     ctx.restore();
   }
 }
@@ -1174,8 +1457,18 @@ function updateObs(o, dt) {
     }
   }
 
-  const m = SHORE_W + o.r + 2;
-  o.x = Math.max(m, Math.min(LW - m, o.x));
+  const olb = shoreLeftAt(o.y)  + o.r + 2;
+  const orb = shoreRightAt(o.y) - o.r - 2;
+  o.x = Math.max(olb, Math.min(orb, o.x));
+
+  // boats fire warning shots that always miss
+  if (o.type.id === 'boat' && o.y > 30 && o.y < LH * 0.55) {
+    o.shootClock -= dt;
+    if (o.shootClock <= 0) {
+      o.shootClock = 0.9 + Math.random() * 0.6;
+      fireBullet(o);
+    }
+  }
 }
 
 function hits(o) {
@@ -1200,27 +1493,56 @@ function update(dt) {
   }
 
   // state === 'playing'
-  scrollSpeed = Math.min(scrollSpeed + SCROLL_ACCEL * dt, MAX_SCROLL);
-  scrollY    += scrollSpeed * dt;
-  distance   += scrollSpeed * dt;
+  const finishPx = FINISH_NM * NM_PX;
+  const atFinish = distance >= finishPx;
 
-  spawnInterval = Math.max(0.55, 1.8 - (distance / NM_PX) * 0.005);
-  spawnClock += dt;
-  if (spawnClock >= spawnInterval) {
-    spawnClock = 0;
-    spawnObs();
-    if (distance > 50 * NM_PX && Math.random() < 0.28) spawnObs();
+  if (atFinish) {
+    // approach to the finish — engines all stop
+    scrollSpeed *= Math.pow(0.4, dt);
+    if (scrollSpeed < 2) scrollSpeed = 0;
+  } else {
+    scrollSpeed = Math.min(scrollSpeed + SCROLL_ACCEL * dt, MAX_SCROLL);
+  }
+  scrollY  += scrollSpeed * dt;
+  distance  = Math.min(distance + scrollSpeed * dt, finishPx);
+
+  // obstacle spawning — only while still under way
+  if (!atFinish) {
+    spawnInterval = Math.max(0.55, 1.8 - (distance / NM_PX) * 0.012);
+    spawnClock += dt;
+    if (spawnClock >= spawnInterval) {
+      spawnClock = 0;
+      spawnObs();
+      if (distance > 30 * NM_PX && Math.random() < 0.32) spawnObs();
+      if (distance > 70 * NM_PX && Math.random() < 0.22) spawnObs();
+    }
   }
 
   for (const o of obstacles) updateObs(o, dt);
-  obstacles = obstacles.filter(o => o.y < LH + 60);
+  obstacles = obstacles.filter(o => !o.dead && o.y < LH + 60);
+
+  // update bullets (cosmetic — they never hit)
+  for (const b of bullets) {
+    b.age += dt;
+    b.x   += b.vx * dt;
+    b.y   += b.vy * dt;
+  }
+  bullets = bullets.filter(b => b.age < b.life
+                                && b.x > -30 && b.x < LW + 30
+                                && b.y > -30 && b.y < LH + 30);
+
+  // post-hit invulnerability + flash decay
+  if (invulTimer > 0) invulTimer = Math.max(0, invulTimer - dt);
+  if (hitFlash  > 0) hitFlash  = Math.max(0, hitFlash  - dt * 2);
 
   // player movement
   const goL = keys.left  || touch.left;
   const goR = keys.right || touch.right;
   if (goL) player.x -= PLAYER_SPD * dt;
   if (goR) player.x += PLAYER_SPD * dt;
-  player.x = Math.max(SHORE_W + TW / 2 + 2, Math.min(WATER_R - TW / 2 - 2, player.x));
+  const plb = shoreLeftAt(PLAYER_Y)  + TW / 2 + 2;
+  const prb = shoreRightAt(PLAYER_Y) - TW / 2 - 2;
+  player.x = Math.max(plb, Math.min(prb, player.x));
 
   // boss spawn
   if (!bossSpawned && distance / NM_PX >= bossTarget) {
@@ -1235,8 +1557,9 @@ function update(dt) {
     // x always tracks player smoothly — no matter where they go
     const dx = player.x - boss.x;
     boss.x += dx * 3.2 * dt;
-    const cm = SHORE_W + 32;
-    boss.x = Math.max(cm, Math.min(LW - cm, boss.x));
+    const blb = shoreLeftAt(boss.y)  + 32;
+    const brb = shoreRightAt(boss.y) - 32;
+    boss.x = Math.max(blb, Math.min(brb, boss.x));
 
     // descend until locked menacingly above the tanker bow
     const lockY = player.y - 200;
@@ -1254,15 +1577,36 @@ function update(dt) {
     }
   }
 
-  // obstacle collisions
-  for (const o of obstacles) {
-    if (hits(o)) {
-      state = 'dying';
-      dyingTimer = 0;
-      leaderboardShown = false;
-      deathReason = tankerName.toUpperCase() + ' STRUCK A ' + o.type.label + ' AND SANK IN THE STRAIT.';
-      boom(player.x, player.y, '#ff6600', 18);
-      boom(o.x, o.y, '#ffcc00', 12);
+  // obstacle collisions — apply damage, mines are fatal, others chip away
+  if (invulTimer <= 0) {
+    for (const o of obstacles) {
+      if (o.dead) continue;
+      if (!hits(o)) continue;
+
+      const dmg = DMG[o.type.id] ?? 10;
+      damage = Math.min(100, damage + dmg);
+      o.dead = true;
+      hitFlash = 1;
+
+      if (o.type.id === 'mine') {
+        boom(o.x, o.y, '#ff7700', 24);
+        boom(player.x, player.y, '#ffaa00', 20);
+        boom(player.x, player.y, '#cc2200', 14);
+      } else {
+        boom(o.x,        o.y,        o.type.color, 12);
+        boom(player.x,   player.y,   '#ff8800',     8);
+      }
+
+      if (damage >= 100) {
+        state = 'dying';
+        dyingTimer = 0;
+        leaderboardShown = false;
+        deathReason = (o.type.id === 'mine')
+          ? tankerName.toUpperCase() + ' STRUCK A NAVAL MINE AND BROKE APART IN THE STRAIT.'
+          : tankerName.toUpperCase() + ' WAS LOST TO ENEMY ACTION IN THE STRAIT.';
+      } else {
+        invulTimer = HIT_INVUL;
+      }
       break;
     }
   }
@@ -1295,11 +1639,26 @@ function draw() {
   }
 
   if (boss) drawBoss(boss);
+  drawBullets();
   drawParticles();
 
-  // tanker — fades on death
+  // tanker — fades on death, flickers when invulnerable, red flash on hit
   const dead = state === 'dying';
-  drawTanker(player.x, player.y, FLAGS[selectedFlag].emoji, dead ? 0.25 : 1);
+  let tankerAlpha = dead ? 0.25 : 1;
+  if (!dead && invulTimer > 0) {
+    // flicker every ~80ms
+    tankerAlpha = (Math.floor(invulTimer * 12) % 2 === 0) ? 1 : 0.35;
+  }
+  drawTanker(player.x, player.y, FLAGS[selectedFlag].emoji, tankerAlpha);
+
+  // hit flash overlay
+  if (hitFlash > 0) {
+    ctx.save();
+    ctx.globalAlpha = hitFlash * 0.45;
+    ctx.fillStyle = '#cc1100';
+    ctx.fillRect(0, 0, LW, LH);
+    ctx.restore();
+  }
 
   if (state !== 'idle' && state !== 'done') drawHUD();
 
@@ -1356,7 +1715,11 @@ function getLB() {
 function saveLB(entry) {
   let lb = getLB();
   lb.push(entry);
-  lb.sort((a, b) => b.nm - a.nm);
+  // primary: NM desc; tiebreak: damage asc (less damage = higher rank)
+  lb.sort((a, b) => {
+    if (b.nm !== a.nm) return b.nm - a.nm;
+    return (a.damage ?? 100) - (b.damage ?? 100);
+  });
   lb = lb.slice(0, 10);
   localStorage.setItem(LB_KEY, JSON.stringify(lb));
   return lb;
@@ -1364,10 +1727,12 @@ function saveLB(entry) {
 
 function showLeaderboard() {
   const nm = Math.floor(distance / NM_PX);
+  const dmg = Math.floor(damage);
   const entry = {
     name: tankerName,
     flag: FLAGS[selectedFlag].emoji,
     nm,
+    damage: dmg,
     date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
   };
   const lb = saveLB(entry);
@@ -1378,9 +1743,14 @@ function showLeaderboard() {
   tbody.innerHTML = '';
   lb.forEach((e, i) => {
     const tr = document.createElement('tr');
-    if (e.name === tankerName && e.nm === nm) tr.className = 'you';
+    if (e.name === tankerName && e.nm === nm && (e.damage ?? -1) === dmg) tr.className = 'you';
+    const d = e.damage ?? 100;
     tr.innerHTML =
-      `<td>${i + 1}</td><td>${e.flag} ${e.name}</td><td>${e.nm}</td><td>${e.date}</td>`;
+      `<td>${i + 1}</td>` +
+      `<td>${e.flag} ${e.name}</td>` +
+      `<td>${e.nm}</td>` +
+      `<td>${d}%</td>` +
+      `<td>${e.date}</td>`;
     tbody.appendChild(tr);
   });
 
@@ -1398,11 +1768,15 @@ function startGame() {
   spawnClock   = 0;
   spawnInterval = 1.8;
   player       = { x: LW / 2, y: PLAYER_Y };
+  bullets      = [];
   boss         = null;
   bossSpawned  = false;
-  bossTarget   = BOSS_THRESHOLD + Math.random() * BOSS_RANDOM;
+  bossTarget   = FINISH_NM;
   dyingTimer   = 0;
   eatenTimer   = 0;
+  damage       = 0;
+  invulTimer   = 0;
+  hitFlash     = 0;
   leaderboardShown = false;
   deathReason  = '';
 
