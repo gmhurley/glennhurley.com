@@ -128,123 +128,105 @@
     .lb-table tr.you td { color: #ffd700; }
     .lb-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
 
-    /* ── Win95 dialog ─────────────────────────────────── */
+    /* ── Cartoon dialog ───────────────────────────────── */
     #dialog-panel {
       background: transparent;
       pointer-events: none;
       align-items: flex-start;
-      padding-top: 22vh;
-    }
-    #dialog-panel .win95 { pointer-events: auto; }
-
-    .win95 {
-      background: #c0c0c0;
-      border-top:    2px solid #ffffff;
-      border-left:   2px solid #ffffff;
-      border-right:  2px solid #404040;
-      border-bottom: 2px solid #404040;
-      box-shadow: 1px 1px 0 #000;
-      width: min(320px, 86vw);
-      font-family: 'MS Sans Serif', 'Tahoma', Geneva, sans-serif;
-      color: #000;
-      animation: w95pop .12s ease-out;
-    }
-    @keyframes w95pop {
-      from { transform: scale(.85); opacity: 0; }
-      to   { transform: scale(1);   opacity: 1; }
-    }
-
-    .win95-tb {
-      background: linear-gradient(90deg, #000080 0%, #1084d0 100%);
-      color: #fff;
-      padding: 3px 4px 2px 6px;
-      font-size: 11px;
-      font-weight: bold;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      letter-spacing: 0.02em;
-    }
-    .win95-x {
-      background: #c0c0c0;
-      border-top:    1px solid #ffffff;
-      border-left:   1px solid #ffffff;
-      border-right:  1px solid #000000;
-      border-bottom: 1px solid #000000;
-      width: 16px;
-      height: 14px;
-      font-size: 11px;
-      line-height: 9px;
-      font-weight: bold;
-      color: #000;
-      cursor: pointer;
-      padding: 0;
-      font-family: inherit;
-    }
-    .win95-x:active {
-      border-top:    1px solid #000000;
-      border-left:   1px solid #000000;
-      border-right:  1px solid #ffffff;
-      border-bottom: 1px solid #ffffff;
-    }
-
-    .win95-body {
-      padding: 16px 14px 12px;
-    }
-    .win95-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
-      margin-bottom: 18px;
-    }
-    .win95-icon {
-      width: 32px;
-      height: 32px;
-      background: #ffe000;
-      border-top:    2px solid #ffff80;
-      border-left:   2px solid #ffff80;
-      border-right:  2px solid #806000;
-      border-bottom: 2px solid #806000;
-      display: flex;
-      align-items: center;
       justify-content: center;
-      color: #000;
-      font-weight: bold;
-      font-size: 22px;
-      line-height: 1;
-      flex-shrink: 0;
+      padding-top: 4vh;
     }
-    .win95-msg {
-      font-size: 12px;
+    #dialog-panel .toon { pointer-events: auto; }
+
+    .toon {
+      position: relative;
+      background: #fffbe8;
+      border: 4px solid #1a1a1a;
+      border-radius: 22px;
+      padding: 18px 18px 14px;
+      width: min(290px, 80vw);
+      font-family: 'Comic Sans MS', 'Marker Felt', 'Trebuchet MS', sans-serif;
+      color: #1a1a1a;
+      box-shadow: 4px 4px 0 #1a1a1a;
+      animation: toon-pop .2s cubic-bezier(.4, 1.7, .6, 1);
+    }
+    @keyframes toon-pop {
+      0%   { transform: scale(.55) rotate(-3deg); opacity: 0; }
+      70%  { transform: scale(1.05) rotate(1deg); opacity: 1; }
+      100% { transform: scale(1)    rotate(0);    opacity: 1; }
+    }
+
+    .toon-name {
+      position: absolute;
+      top: -14px;
+      left: 18px;
+      background: #1a1a1a;
+      color: #ffe060;
+      padding: 3px 10px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: bold;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-family: 'Trebuchet MS', sans-serif;
+    }
+
+    /* tail of the speech bubble — points down toward the boss ship */
+    .toon::after {
+      content: '';
+      position: absolute;
+      bottom: -22px;
+      left: 50%;
+      margin-left: -14px;
+      width: 0;
+      height: 0;
+      border-left: 14px solid transparent;
+      border-right: 14px solid transparent;
+      border-top: 22px solid #1a1a1a;
+    }
+    .toon::before {
+      content: '';
+      position: absolute;
+      bottom: -13px;
+      left: 50%;
+      margin-left: -9px;
+      width: 0;
+      height: 0;
+      border-left: 9px solid transparent;
+      border-right: 9px solid transparent;
+      border-top: 15px solid #fffbe8;
+      z-index: 1;
+    }
+
+    .toon-msg {
+      font-size: 14px;
       line-height: 1.45;
-      color: #000;
+      color: #1a1a1a;
     }
-    .win95-msg b { font-weight: bold; }
-    .win95-buttons {
+    .toon-msg b { font-weight: bold; }
+
+    .toon-buttons {
       display: flex;
       justify-content: center;
+      margin-top: 14px;
     }
-    .win95-btn {
-      background: #c0c0c0;
-      border-top:    2px solid #ffffff;
-      border-left:   2px solid #ffffff;
-      border-right:  2px solid #404040;
-      border-bottom: 2px solid #404040;
-      padding: 4px 22px;
-      min-width: 76px;
+    .toon-btn {
+      background: #ffe060;
+      border: 3px solid #1a1a1a;
+      border-radius: 12px;
+      padding: 6px 26px;
       font-family: inherit;
-      font-size: 12px;
+      font-size: 14px;
+      font-weight: bold;
       cursor: pointer;
-      color: #000;
-      outline: 1px dotted #000;
-      outline-offset: -4px;
+      color: #1a1a1a;
+      box-shadow: 3px 3px 0 #1a1a1a;
+      transition: transform .08s, box-shadow .08s;
     }
-    .win95-btn:active {
-      border-top:    2px solid #404040;
-      border-left:   2px solid #404040;
-      border-right:  2px solid #ffffff;
-      border-bottom: 2px solid #ffffff;
-      padding: 5px 21px 3px 23px;
+    .toon-btn:hover { background: #ffe880; }
+    .toon-btn:active {
+      transform: translate(3px, 3px);
+      box-shadow: 0 0 0 #1a1a1a;
     }
   </style>
 </head>
@@ -291,19 +273,11 @@
 </div>
 
 <div class="panel hidden" id="dialog-panel">
-  <div class="win95">
-    <div class="win95-tb">
-      <span>USS MANIFEST DESTINY (GOLDEN EDITION)</span>
-      <button class="win95-x" id="dialog-x">×</button>
-    </div>
-    <div class="win95-body">
-      <div class="win95-row">
-        <div class="win95-icon">!</div>
-        <div class="win95-msg" id="dialog-msg"></div>
-      </div>
-      <div class="win95-buttons">
-        <button class="win95-btn" id="dialog-ok">OK</button>
-      </div>
+  <div class="toon">
+    <div class="toon-name">USS MANIFEST DESTINY</div>
+    <div class="toon-msg" id="dialog-msg"></div>
+    <div class="toon-buttons">
+      <button class="toon-btn" id="dialog-ok">AYE!</button>
     </div>
   </div>
 </div>
@@ -349,6 +323,7 @@ const DMG = {
   missile:  45,
   drone:    25,
   boat:     12,   // ramming damage from a fast boat
+  rpg:      18,   // RPG round fired by a fast boat
 };
 
 // ── flags ───────────────────────────────────────────────────────
@@ -457,18 +432,19 @@ function spawnObs() {
 }
 
 function fireBullet(o) {
-  // aim toward the tanker but always miss — these are warning shots
+  // RPG round — aimed at the tanker with some spread; player can dodge by moving
   const ang0 = Math.atan2(player.y - o.y, player.x - o.x);
-  const miss = (Math.random() < 0.5 ? -1 : 1) * (0.16 + Math.random() * 0.12);
+  const miss = (Math.random() < 0.5 ? -1 : 1) * (0.05 + Math.random() * 0.08);
   const ang  = ang0 + miss;
-  const spd  = 420;
+  const spd  = 320;
   bullets.push({
     x: o.x,
-    y: o.y + 14,           // muzzle of the foredeck gun
+    y: o.y + 14,           // muzzle of the foredeck launcher
     vx: Math.cos(ang) * spd,
     vy: Math.sin(ang) * spd,
     age: 0,
-    life: 1.4,
+    life: 2.0,
+    r: 5,                  // collision radius
   });
 }
 
@@ -1400,23 +1376,73 @@ function drawParticles() {
 
 function drawBullets() {
   for (const b of bullets) {
-    const a = 1 - b.age / b.life;
-    const tx = b.x - b.vx * 0.022;
-    const ty = b.y - b.vy * 0.022;
+    const a   = Math.max(0, 1 - b.age / b.life);
+    const ang = Math.atan2(b.vy, b.vx);
+
     ctx.save();
-    ctx.globalAlpha = a * 0.5;
-    ctx.strokeStyle = '#ffcc40';
-    ctx.lineWidth = 5;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(b.x, b.y); ctx.lineTo(tx, ty);
-    ctx.stroke();
+    ctx.translate(b.x, b.y);
+    ctx.rotate(ang);
     ctx.globalAlpha = a;
-    ctx.strokeStyle = '#fff8a0';
-    ctx.lineWidth = 1.6;
+
+    // smoke + flame trail behind the rocket
+    const trailLen = 26;
+    const grad = ctx.createLinearGradient(-trailLen, 0, -3, 0);
+    grad.addColorStop(0,    'rgba(180,180,180,0)');
+    grad.addColorStop(0.45, 'rgba(220,200,180,0.45)');
+    grad.addColorStop(0.85, 'rgba(255,180,80,0.85)');
+    grad.addColorStop(1,    'rgba(255,240,180,1)');
+    ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.moveTo(b.x, b.y); ctx.lineTo(tx, ty);
-    ctx.stroke();
+    ctx.moveTo(-trailLen, -2.2);
+    ctx.lineTo(-3,        -3.2);
+    ctx.lineTo(-3,         3.2);
+    ctx.lineTo(-trailLen,  2.2);
+    ctx.closePath();
+    ctx.fill();
+
+    // tail fins
+    ctx.fillStyle = '#2a3528';
+    ctx.beginPath();
+    ctx.moveTo(-3, -2.5);
+    ctx.lineTo(-6, -4.5);
+    ctx.lineTo(-1, -2.5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-3,  2.5);
+    ctx.lineTo(-6,  4.5);
+    ctx.lineTo(-1,  2.5);
+    ctx.closePath();
+    ctx.fill();
+
+    // body (cylindrical, olive drab)
+    ctx.fillStyle = '#445a3a';
+    ctx.fillRect(-3, -2.6, 9, 5.2);
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.fillRect(-3, 0.6, 9, 2);
+
+    // warhead (bulbous nose typical of RPG-7 PG-7V round)
+    ctx.fillStyle = '#5a3a26';
+    ctx.beginPath();
+    ctx.moveTo(6, -3.6);
+    ctx.quadraticCurveTo(11, -3.6, 12, 0);
+    ctx.quadraticCurveTo(11,  3.6, 6,  3.6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.beginPath();
+    ctx.moveTo(6, 0.4);
+    ctx.quadraticCurveTo(10, 1.6, 12, 0);
+    ctx.lineTo(6, 0.4);
+    ctx.closePath();
+    ctx.fill();
+
+    // fuse tip
+    ctx.fillStyle = '#1a1a1a';
+    ctx.beginPath();
+    ctx.arc(12, 0, 1.1, 0, Math.PI * 2);
+    ctx.fill();
+
     ctx.restore();
   }
 }
@@ -1522,12 +1548,39 @@ function update(dt) {
   for (const o of obstacles) updateObs(o, dt);
   obstacles = obstacles.filter(o => !o.dead && o.y < LH + 60);
 
-  // update bullets (cosmetic — they never hit)
+  // update bullets
   for (const b of bullets) {
     b.age += dt;
     b.x   += b.vx * dt;
     b.y   += b.vy * dt;
   }
+
+  // bullet collisions with the tanker
+  if (invulTimer <= 0) {
+    for (const b of bullets) {
+      if (b.age >= b.life) continue;
+      const dx = b.x - player.x;
+      const dy = b.y - player.y;
+      const rr = (b.r ?? 5) + Math.min(TW, TH) * 0.36;
+      if (dx * dx + dy * dy < rr * rr) {
+        damage = Math.min(100, damage + DMG.rpg);
+        hitFlash = 1;
+        boom(b.x, b.y, '#ffaa44', 14);
+        boom(player.x, player.y, '#ff6622', 8);
+        b.age = b.life;                             // consume the round
+        if (damage >= 100) {
+          state = 'dying';
+          dyingTimer = 0;
+          leaderboardShown = false;
+          deathReason = tankerName.toUpperCase() + ' WAS SUNK BY AN RPG ROUND IN THE STRAIT.';
+        } else {
+          invulTimer = HIT_INVUL;
+        }
+        break;
+      }
+    }
+  }
+
   bullets = bullets.filter(b => b.age < b.life
                                 && b.x > -30 && b.x < LW + 30
                                 && b.y > -30 && b.y < LH + 30);
@@ -1704,7 +1757,6 @@ function closeBossDialog() {
 }
 
 document.getElementById('dialog-ok').addEventListener('click', closeBossDialog);
-document.getElementById('dialog-x').addEventListener('click',  closeBossDialog);
 
 // ── leaderboard ──────────────────────────────────────────────────
 const LB_KEY = 'hormuz_lb_v1';
