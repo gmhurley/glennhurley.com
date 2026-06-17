@@ -1,0 +1,57 @@
+name: Add log entry
+
+# Triggered from a phone (iOS Shortcut -> GitHub API) or the Actions tab.
+# Formats a new log entry, writes it to the log + RSS feed, and commits.
+on:
+  workflow_dispatch:
+    inputs:
+      text:
+        description: "Post text"
+        required: true
+        type: string
+      location:
+        description: "Location (City, region/country)"
+        required: false
+        default: "Winston-Salem, NC"
+        type: string
+      datetime:
+        description: "ISO 8601 timestamp, e.g. 2026-06-17T22:45:00+02:00 (blank = now UTC)"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: add-log
+  cancel-in-progress: false
+
+jobs:
+  add-log:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Add the log entry
+        env:
+          POST_TEXT: ${{ inputs.text }}
+          POST_LOCATION: ${{ inputs.location }}
+          POST_DATETIME: ${{ inputs.datetime }}
+        run: |
+          python3 scripts/add_log.py \
+            --text "$POST_TEXT" \
+            --location "$POST_LOCATION" \
+            --datetime "$POST_DATETIME"
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git add docs/log/index.html docs/feed.xml
+          git commit -m "Add log entry from phone"
+          git push
