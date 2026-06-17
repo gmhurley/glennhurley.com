@@ -8,6 +8,13 @@
     <atom:link href="https://glennhurley.com/blog/feed.xml" rel="self" type="application/rss+xml" />
 
     <item>
+      <title>Posting to My Site From My Phone With an Apple Shortcut</title>
+      <link>https://glennhurley.com/blog/2026/06/posting-to-my-site-from-my-phone/</link>
+      <guid>https://glennhurley.com/blog/2026/06/posting-to-my-site-from-my-phone/</guid>
+      <pubDate>Thu, 18 Jun 2026 00:30:00 +0200</pubDate>
+      <description><![CDATA[How I wired up an Apple Shortcut and a GitHub Action so I can post to my site&#x27;s log straight from my phone — and the setup headaches I hit along the way.]]></description>
+    </item>
+    <item>
       <title>Mac Clipboard Screenshots on Linux</title>
       <link>https://glennhurley.com/blog/2026/04/recreating-macos-clipboard-screenshots-on-linux/</link>
       <guid>https://glennhurley.com/blog/2026/04/recreating-macos-clipboard-screenshots-on-linux/</guid>

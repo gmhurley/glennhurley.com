@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Posting to My Site From My Phone With an Apple Shortcut | Glenn Hurley</title>
+  <meta name="description" content="How I wired up an Apple Shortcut and a GitHub Action so I can post to my site&#x27;s log straight from my phone — and the setup headaches I hit along the way." />
+  <link rel="canonical" href="https://glennhurley.com/blog/2026/06/posting-to-my-site-from-my-phone/" />
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="alternate" type="application/rss+xml" title="Glenn Hurley Blog" href="/blog/feed.xml" />
+  <link rel="stylesheet" href="/css/blog.css" />
+</head>
+<body>
+  <main class="post-shell">
+    <article class="post">
+      <div class="blog-topbar">
+        <a class="blog-home" href="/">&larr; glennhurley.com</a>
+        <a class="blog-toplink" href="/log">Log</a>
+      </div>
+      <header class="post-header">
+        <p class="post-backlink"><a href="/blog">&larr; Back to Blog</a></p>
+        <h1>Posting to My Site From My Phone With an Apple Shortcut</h1>
+        <p class="post-meta"><time datetime="2026-06-18">June 18, 2026</time></p>
+        
+      </header>
+      <div class="post-body">
+        <p>My <a href="/log">log</a> is a little Twitter clone. Short thoughts, timestamps, a location pin — the stuff I miss about old Twitter. The problem: every &quot;tweet&quot; was really me opening a laptop, hand-editing two files, keeping the HTML and the RSS feed in sync, and pushing to GitHub.</p>
+<p>That&#x27;s a lot of friction for a one-line thought. So thoughts stopped getting posted.</p>
+<p>I wanted to post from my phone, the way you&#x27;d actually use Twitter. Here&#x27;s what I landed on.</p>
+<h2>The Idea</h2>
+<p>The whole thing is three pieces:</p>
+<ol><li><strong>An Apple Shortcut</strong> on my phone — I tap it, it grabs my location and the time, and asks for the text.</li><li><strong>A GitHub Action</strong> that takes that text and runs a script.</li><li><strong>A Python script</strong> in the repo that formats the post into both the log page and the RSS feed, commits, and lets GitHub Pages redeploy.</li></ol>
+<p>The key decision: the phone only sends <strong>plain text</strong>. All the formatting logic lives in the repo, where I can actually test and fix it. The phone has the easy job.</p>
+<h2>The Script</h2>
+<p>The script does the boring, error-prone part — turning a sentence into a properly formatted entry in two places and keeping them in sync. It takes three arguments:</p>
+<pre><code class="language-bash">python3 scripts/add_log.py \
+  --text &quot;Back in Malta. Posting this from my phone.&quot; \
+  --location &quot;Msida, Malta&quot; \
+  --datetime &quot;2026-06-18T00:16:00+02:00&quot;</code></pre>
+<p>It escapes the HTML, builds the RSS <code>&lt;item&gt;</code>, and even auto-numbers the entry id when I post more than once in a day. I never touch the markup.</p>
+<h2>The GitHub Action</h2>
+<p>A <code>workflow_dispatch</code> workflow runs the script and commits the result:</p>
+<pre><code class="language-yaml">on:
+  workflow_dispatch:
+    inputs:
+      text:
+        required: true
+      location:
+        default: &quot;Winston-Salem, NC&quot;
+      datetime:
+        default: &quot;&quot;</code></pre>
+<p>One thing worth doing here: pass the inputs into the script through environment variables, not by dropping them straight into the shell command. Otherwise a stray quote — or a <code>&lt;script&gt;</code> tag in a post — can break the run (or worse).</p>
+<h2>The Shortcut</h2>
+<p>This is the part that talks to GitHub. The Shortcut:</p>
+<ul><li>Gets the current location and pulls out <strong>City</strong> and <strong>Region</strong></li><li>Formats the current date as <strong>ISO 8601</strong> (with the time zone)</li><li>Asks me for the post text</li><li>Sends it all to GitHub&#x27;s API with <strong>Get Contents of URL</strong>:</li></ul>
+<pre><code>POST https://api.github.com/repos/&lt;user&gt;/&lt;repo&gt;/actions/workflows/add-log.yml/dispatches</code></pre>
+<p>With an <code>Authorization: Bearer &lt;token&gt;</code> header and a JSON body pointing at the branch and the inputs. A fine-grained token scoped to just this one repo, with <strong>Actions: read and write</strong>, is all it needs.</p>
+<p>Tap, type, done. The post is live a minute later.</p>
+<h2>The Headaches (So You Can Skip Them)</h2>
+<p>I won&#x27;t pretend this was smooth. The script and the Action were quick. The <strong>Shortcut</strong> was the pain. Three things got me:</p>
+<p><strong>1. There&#x27;s no &quot;Country&quot; field.</strong> Apple&#x27;s <em>Get Details of Location</em> gives you City and State, but no Country. The one you want is <strong>Region</strong> — at the country level it returns the country name (it gave me &quot;Malta&quot;).</p>
+<p><strong>2. JSON quotes.</strong> In the Shortcut&#x27;s request-body builder, you type keys and values <em>without</em> quotation marks — it adds them for you. Type <code>&quot;ref&quot;</code> with the quotes and GitHub bounces it with a <code>422 &quot;not permitted keys&quot;</code> error.</p>
+<p><strong>3. ISO 8601, for real.</strong> My first working dispatch failed because the Shortcut sent <code>Jun 18, 2026 at 12:12 AM</code> instead of <code>2026-06-18T00:12:00+02:00</code>. The script wants a real ISO timestamp with a time zone offset — otherwise it can&#x27;t know I&#x27;m six time zones from home. Make sure the date is actually formatted, and that the <em>formatted</em> value is the one going into the request, not the raw date.</p>
+<h2>The Result</h2>
+<div class="post-table-wrap"><table><thead><tr><th></th><th>Before</th><th>After</th></tr></thead><tbody><tr><td>Where I post from</td><td>Laptop</td><td>Phone</td></tr><tr><td>Files I edit by hand</td><td>2</td><td>0</td></tr><tr><td>Steps</td><td>Open editor, format HTML, format RSS, commit, push</td><td>Tap, type</td></tr></tbody></table></div>
+<p>Was the Shortcut a pain to set up? Yes. But it&#x27;s a one-time pain, and now posting a thought is genuinely as easy as it should&#x27;ve been all along.</p>
+<p>This very site is static — no database, no server, no CMS. Turns out you don&#x27;t need one to post from your phone. You just need a shortcut and a little glue.</p>
+      </div>
+    </article>
+
+    <footer class="blog-footer">
+      &copy; <span id="year"></span> Glenn Hurley &nbsp;&middot;&nbsp; <a href="/blog/feed.xml">RSS</a>
+    </footer>
+  </main>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+  <script data-goatcounter="https://shroomslice.goatcounter.com/count"
+          async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
