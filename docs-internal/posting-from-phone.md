@@ -27,10 +27,12 @@ Create a new Shortcut (name it e.g. "Post to log") with these actions:
 1. **Get Current Location**
 2. **Get Details of Locations** → *City* → save as variable `City`
 3. **Get Details of Locations** → *State* → save as variable `State`
-4. **Get Details of Locations** → *Country* → save as variable `Country`
+4. **Get Details of Locations** → *Region* → save as variable `Region`
+   (Shortcuts has no "Country" field; *Region* returns the country/area name,
+   e.g. "Malta".)
 5. **If** `State` *has any value*
    - **Text:** `City, State` → set variable `Location`
-   - **Otherwise:** **Text:** `City, Country` → set variable `Location`
+   - **Otherwise:** **Text:** `City, Region` → set variable `Location`
 6. **Format Date** → input *Current Date*, format **ISO 8601**, *Include Time* on,
    include the time zone → save as variable `When`
 7. **Ask for Input** (Text) → prompt "What's the post?" → save as variable `Post`
