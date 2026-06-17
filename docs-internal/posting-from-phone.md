@@ -42,18 +42,20 @@ Create a new Shortcut (name it e.g. "Post to log") with these actions:
    - **Headers:**
      - `Authorization` → `Bearer github_pat_YOUR_TOKEN_HERE`
      - `Accept` → `application/vnd.github+json`
-   - **Request Body:** JSON
+   - **Request Body:** JSON. In Shortcuts' field builder, add these — **type
+     keys and values without quotation marks**; Shortcuts adds the quotes. (If a
+     key shows up as `"ref"` with quotes baked in, GitHub rejects it with a 422
+     "not permitted keys" error.)
+     - `ref` (Text) → `main`
+     - `inputs` (Dictionary) with three Text fields:
+       - `text` → *Post* variable
+       - `location` → *Location* variable
+       - `datetime` → *When* variable
+
+     The assembled body is equivalent to:
      ```json
-     {
-       "ref": "main",
-       "inputs": {
-         "text": "<Post variable>",
-         "location": "<Location variable>",
-         "datetime": "<When variable>"
-       }
-     }
+     { "ref": "main", "inputs": { "text": "...", "location": "...", "datetime": "..." } }
      ```
-     (Insert the variables where shown — don't type the angle brackets.)
 
 Add it to your Home Screen or the Share Sheet. A successful call returns
 **HTTP 204** with an empty body — that's normal, the post is on its way.
