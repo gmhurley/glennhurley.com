@@ -40,7 +40,7 @@ def parse_when(raw: str | None) -> datetime:
     """Parse an ISO 8601 timestamp into a timezone-aware datetime."""
     if not raw:
         return datetime.now(timezone.utc)
-    text = raw.strip().splitlines()[0].replace("Z", "+00:00")
+    text = raw.strip().splitlines()[-1].replace("Z", "+00:00")
     dt = datetime.fromisoformat(text)
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
