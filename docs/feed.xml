@@ -8,6 +8,14 @@
     <atom:link href="https://glennhurley.com/feed.xml" rel="self" type="application/rss+xml" />
 
     <item>
+      <title>Testing out fix</title>
+      <link>https://glennhurley.com/log#2026-07-03</link>
+      <guid>https://glennhurley.com/log#2026-07-03</guid>
+      <pubDate>Fri, 03 Jul 2026 04:45:00 -0400</pubDate>
+      <description><![CDATA[Testing out fix]]></description>
+    </item>
+
+    <item>
       <title>Checking to see if the time is still messed up</title>
       <link>https://glennhurley.com/log#2026-06-26</link>
       <guid>https://glennhurley.com/log#2026-06-26</guid>
