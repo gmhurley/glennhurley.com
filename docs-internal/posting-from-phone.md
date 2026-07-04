@@ -33,8 +33,12 @@ Create a new Shortcut (name it e.g. "Post to log") with these actions:
 5. **If** `State` *has any value*
    - **Text:** `City, State` → set variable `Location`
    - **Otherwise:** **Text:** `City, Region` → set variable `Location`
-6. **Format Date** → input *Current Date*, format **ISO 8601**, *Include Time* on,
-   include the time zone → save as variable `When`
+6. **Format Date** → input *Current Date*, format **Custom**,
+   custom format string: `yyyy-MM-dd'T'HH:mm:ssxxxxx` → save as variable `When`
+
+   > **Why not ISO 8601?** iOS Shortcuts' built-in ISO 8601 preset loses the time
+   > component in some circumstances, defaulting to noon (T12:00:00). The custom
+   > format explicitly includes HH:mm:ss so the actual current time is always sent.
 7. **Ask for Input** (Text) → prompt "What's the post?" → save as variable `Post`
 8. **Get Contents of URL**:
    - **URL:** `https://api.github.com/repos/gmhurley/glennhurley.com/actions/workflows/add-log.yml/dispatches`
