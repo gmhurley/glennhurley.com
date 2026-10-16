@@ -2,7 +2,33 @@
 
 Personal website for Glenn Hurley, hosted on GitHub Pages. Site files live in `docs/`.
 
+Plain static HTML/CSS/JS: no framework, no package manager, no build step except the blog generator (`scripts/build_blog.py`, stdlib Python only). Pushing to `main` deploys.
+
+The user often works from their phone with voice dictation, so expect misspellings in requests (e.g. "Harley" for "Hurley") and interpret them sensibly.
+
+## Conventions for pages
+
+- Every public page includes the GoatCounter snippet just before `</body>`:
+  ```html
+  <script data-goatcounter="https://shroomslice.goatcounter.com/count"
+          async src="//gc.zgo.at/count.js"></script>
+  ```
+- Standard pages use `/css/styles.css`, a `<main class="container">`, canonical + description meta tags, and the `&copy; <span id="year"></span> Glenn Hurley` footer. Copy `docs/games/index.html` as a starting point.
+- Each section lives in its own folder as `docs/<name>/index.html` so URLs are clean (`/games`, `/hormuz`).
+- When adding a new top-level section, link it from the homepage nav in `docs/index.html` and add it to `docs/sitemap.xml`.
+- Use root-relative links (`/log`, `/css/styles.css`).
+
 ## Adding a log entry
+
+The preferred way is the script, which writes the log HTML and the RSS feed together and handles same-day id suffixes:
+
+```bash
+python3 scripts/add_log.py --text "..." --location "Winston-Salem, NC" --datetime "2026-06-17T22:45:00-04:00"
+```
+
+The same script runs in the `Add log entry` GitHub Action (`.github/workflows/add-log.yml`), which the user's iPhone Shortcut triggers. Setup notes are in `docs-internal/posting-from-phone.md`. Because those posts are committed by the Action, **always pull before editing the log**.
+
+The rest of this section describes the format the script produces, for hand edits.
 
 When the user says "add a post" or "add a log entry", insert a new entry at the top of the feed in `docs/log/index.html`, directly below the `<!-- TEMPLATE -->` comment block.
 
@@ -116,6 +142,14 @@ updated: 2026-04-22T09:30:00-04:00
 - The log RSS feed stays at `docs/feed.xml`; blog RSS lives at `docs/blog/feed.xml`
 - After adding or editing a blog post, rebuild the blog and ask if the user wants to commit and push
 
+## Games
+
+Small self-contained browser games, each a single `index.html` with inline CSS and JS. They're listed as cards on `docs/games/index.html`; add a card there when you add a game.
+
+- **Tic-Tac-Toe** (`docs/tictactoe/`): player vs. computer. Its shared leaderboard is stored in a jsonbin.io bin, and the API key is embedded in the client-side JS.
+- **Hangman** (`docs/hangman/`): kid-friendly word list, paper-and-sketch style.
+- **Strait of Hormuz** (`docs/hormuz/`): a joke game the user vibe-coded about steering an oil tanker up the strait past mines, speedboats, drones, and missiles. There's a boss, the USS Manifest Destiny (Golden Edition). It renders on a full-screen `<canvas>` with a 400×720 logical size scaled to fit and touch-first controls. The finish line is at 100 nm (`FINISH_NM`), and tuning constants sit near the top of the script (`PLAYER_SPD`, `BASE_SCROLL`, `DMG`, `OBS`). The "Hall of Fallen Tankers" leaderboard is per-browser `localStorage` (`hormuz_lb_v1`). Keep the tone tongue-in-cheek.
+
 ## Data dump folder
 
 `datadump/` is a local-only scratch folder for dropping in screenshots, images, reference files, or any content needed during a session. Its contents are gitignored and will never be committed.
@@ -138,10 +172,15 @@ docs/
   gallery/
     index.html    - Artist A's gallery
     img/          - artwork image files
+  games/index.html     - games landing page
+  tictactoe/index.html - tic-tac-toe
+  hangman/index.html   - hangman
+  hormuz/index.html    - Strait of Hormuz
   css/
-    styles.css    - homepage styles
+    styles.css    - homepage styles (shared by most pages)
     log.css       - log page styles
     gallery.css   - gallery styles
+    blog.css      - blog styles
   feed.xml        - RSS feed (keep in sync with log entries)
   og.png          - open graph image
   favicon.ico
@@ -152,4 +191,9 @@ content/
   blog/           - Markdown source for blog posts
 scripts/
   build_blog.py   - generates docs/blog/ from content/blog/
+  add_log.py      - adds a log entry + RSS item (used by the phone Action)
+docs-internal/    - private notes for the user, not published
+.github/workflows/
+  add-log.yml     - workflow_dispatch Action for posting from phone
+datadump/         - local scratch, gitignored
 ```
