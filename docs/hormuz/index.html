@@ -184,6 +184,53 @@
     .btn-primary:active { transform: translate(4px, 4px); box-shadow: 0 0 0 #000; }
     .btn-primary:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 
+    .btn-secondary {
+      width: 100%;
+      margin-top: 12px;
+      background: transparent;
+      border: 2px solid var(--cyan);
+      padding: 10px;
+      color: var(--cyan-hi);
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: bold;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 #000;
+      transition: transform .06s, box-shadow .06s, background .12s;
+    }
+    .btn-secondary:hover { background: rgba(91, 192, 248, 0.12); }
+    .btn-secondary:active { transform: translate(3px, 3px); box-shadow: 0 0 0 #000; }
+
+    /* how-to-play */
+    .howto { text-align: left; }
+    .howto h1, .howto .tagline { text-align: center; }
+    .hazards { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+    .hazard {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--navy-deep);
+      border: 2px solid var(--line);
+      padding: 6px 10px 6px 6px;
+    }
+    .hazard canvas { width: 52px; height: 52px; flex: none; background: #0c2540; }
+    .hazard-text { flex: 1; min-width: 0; }
+    .hazard-name { display: block; font-size: 0.85rem; font-weight: bold; color: #f0f6fc; text-transform: uppercase; }
+    .hazard-note { display: block; font-size: 0.75rem; color: var(--text-dim); margin-top: 2px; line-height: 1.35; }
+    .hazard-dmg {
+      flex: none;
+      min-width: 3.6em;
+      text-align: center;
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--red);
+      border: 2px solid var(--red);
+      padding: 3px 4px;
+    }
+    .hazard-dmg.fatal { background: var(--red); color: #1a0000; font-size: 0.7rem; }
+    .howto-text { font-size: 0.85rem; color: var(--text-dim); line-height: 1.5; margin-bottom: 16px; }
+
     .controls-hint {
       font-size: 0.8rem;
       color: var(--text-dim);
@@ -223,6 +270,7 @@
       pointer-events: auto;
       width: 84px;
       height: 84px;
+      border-radius: 50%;
       background: rgba(13, 31, 45, 0.55);
       border: 3px solid rgba(91, 192, 248, 0.85);
       box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.7);
@@ -428,8 +476,30 @@
     <input type="text" id="tanker-name" placeholder="MV CRUDE JUSTICE" maxlength="22"
            autocomplete="off" spellcheck="false" autocapitalize="characters" />
     <button class="btn-primary" id="deploy-btn">⚓ DEPLOY</button>
+    <button class="btn-secondary" id="howto-btn">? HOW TO PLAY</button>
     <p class="controls-hint" id="controls-hint">Steer by tapping the left or right side of the screen, or use <kbd>←</kbd> <kbd>→</kbd> / <kbd>A</kbd> <kbd>D</kbd>.</p>
     <p class="version" id="version"></p>
+  </div>
+</div>
+
+<div class="panel hidden" id="howto-panel">
+  <div class="card howto">
+    <h1>HOW TO PLAY</h1>
+    <p class="tagline">Make it 100 nm up the strait in one piece.</p>
+
+    <span class="field-label">Incoming</span>
+    <div class="hazards" id="hazard-list"></div>
+
+    <span class="field-label">Your hull</span>
+    <p class="howto-text">You start at 100%. Each hit takes a chunk off; hit 0% and you sink. After a hit your tanker blinks for a second and nothing can touch you.</p>
+
+    <span class="field-label">Not your problem</span>
+    <p class="howto-text">Iranian rockets and American B-2s are busy with each other overhead. They can't hit you.</p>
+
+    <span class="field-label">At 100 nm</span>
+    <p class="howto-text">Freedom awaits. Probably.</p>
+
+    <button class="btn-primary" id="howto-back">⚓ GOT IT</button>
   </div>
 </div>
 
@@ -470,9 +540,9 @@
 
 // ── canvas / scaling ────────────────────────────────────────────
 const canvas = document.getElementById('c');
-const ctx    = canvas.getContext('2d');
+let   ctx    = canvas.getContext('2d');   // swapped briefly to draw how-to-play icons
 // Bump on every change so it's obvious on a phone whether a fresh copy loaded.
-const VERSION = 'v1.7';
+const VERSION = 'v1.8';
 const LW = 400, LH = 720;
 const MONO = "ui-monospace, 'SF Mono', Menlo, Consolas, 'DejaVu Sans Mono', 'Courier New', monospace";
 
@@ -2372,17 +2442,6 @@ function draw() {
       case 'drone':   drawDrone(o.x, o.y, o.r, o.age); break;
       case 'missile': drawMissile(o.x, o.y, o.r, o.vy + scrollSpeed, o.vx); break;
     }
-    // label fades in briefly
-    if (o.age < 1.2) {
-      const la = Math.min(o.age * 3, 1) * (1 - Math.max(0, (o.age - 0.8) / 0.4));
-      ctx.save();
-      ctx.globalAlpha = la;
-      ctx.fillStyle = o.type.color;
-      ctx.font = '8px Courier New';
-      ctx.textAlign = 'center';
-      ctx.fillText(o.type.label, o.x, o.y - o.r - 5);
-      ctx.restore();
-    }
   }
 
   if (boss) drawBoss(boss);
@@ -2547,8 +2606,64 @@ function startGame() {
   document.getElementById('dialog-panel').classList.add('hidden');
 }
 
+// ── how to play ──────────────────────────────────────────────────
+// Damage numbers come straight from DMG so this screen can't go stale.
+const HAZARDS = [
+  { name: 'Naval mine',        dmg: DMG.mine,    note: 'Drifts slowly. One touch and you sink.',
+    draw: () => drawMine(0, 0, 18, 0.4),                 scale: 0.8 },
+  { name: 'Anti-ship missile', dmg: DMG.missile, note: 'Homes in on you. Dodge late.',
+    draw: () => drawMissile(0, 1.5, 7, 1, 0),            scale: 0.85 },
+  { name: 'Shahed-136 drone',  dmg: DMG.drone,   note: 'Weaves wide across the channel.',
+    draw: () => drawDrone(0, 0, 11, 0.3),                scale: 0.9 },
+  { name: 'IRGCN fast boat',   dmg: DMG.boat,    note: 'Zigzags at you and fires RPGs.',
+    draw: () => drawSpeedboat(0, 0, 12, 0.5),            scale: 0.85 },
+  { name: 'RPG round',         dmg: DMG.rpg,     note: 'Fired by the boats, aimed at you.',
+    draw: () => { const keep = bullets;
+                  bullets = [{ x: 9, y: 0, vx: 1, vy: 0, age: 0, life: 1 }];
+                  drawBullets(); bullets = keep; },      scale: 1.2 },
+];
+
+let hazardsBuilt = false;
+function buildHazardList() {
+  if (hazardsBuilt) return;
+  hazardsBuilt = true;
+  const list = document.getElementById('hazard-list');
+  const dpr = window.devicePixelRatio || 1, SIZE = 52;
+  for (const h of HAZARDS) {
+    const row = document.createElement('div');
+    row.className = 'hazard';
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = Math.round(SIZE * dpr);
+    const gameCtx = ctx;
+    try {
+      ctx = cv.getContext('2d');
+      ctx.setTransform(dpr * h.scale, 0, 0, dpr * h.scale, cv.width / 2, cv.height / 2);
+      h.draw();
+    } finally {
+      ctx = gameCtx;
+    }
+    const fatal = h.dmg >= 100;
+    row.innerHTML =
+      `<span class="hazard-text"><span class="hazard-name">${h.name}</span>` +
+      `<span class="hazard-note">${h.note}</span></span>` +
+      `<span class="hazard-dmg${fatal ? ' fatal' : ''}">${fatal ? 'SINKS<br>YOU' : '−' + h.dmg + '%'}</span>`;
+    row.prepend(cv);
+    list.appendChild(row);
+  }
+}
+
+document.getElementById('howto-btn').addEventListener('click', () => {
+  buildHazardList();
+  document.getElementById('start-panel').classList.add('hidden');
+  document.getElementById('howto-panel').classList.remove('hidden');
+});
+document.getElementById('howto-back').addEventListener('click', () => {
+  document.getElementById('howto-panel').classList.add('hidden');
+  document.getElementById('start-panel').classList.remove('hidden');
+});
+
 // ── UI ───────────────────────────────────────────────────────────
-const IS_TOUCH = (window.matchMedia && matchMedia('(pointer: coarse)').matches)
+const IS_TOUCH = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches)
               || 'ontouchstart' in window;
 const touchControls = document.getElementById('touch-controls');
 
