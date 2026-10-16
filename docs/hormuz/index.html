@@ -77,7 +77,8 @@
       margin-bottom: 8px;
     }
     .tagline {
-      font-size: 0.85rem;
+      font-size: min(0.85rem, 3.3vw);
+      white-space: nowrap;
       color: var(--text-dim);
       margin-bottom: 20px;
     }
@@ -203,6 +204,43 @@
       border: 1px solid #36597a;
       box-shadow: 1px 1px 0 #000;
       padding: 0 5px;
+    }
+
+    /* ── On-screen steering buttons (touch devices) ──── */
+    #touch-controls {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);
+      display: flex;
+      justify-content: space-between;
+      padding: 0 18px;
+      pointer-events: none;
+      z-index: 5;            /* under the menu panels */
+    }
+    #touch-controls.hidden { display: none; }
+    .steer-btn {
+      pointer-events: auto;
+      width: 84px;
+      height: 84px;
+      background: rgba(13, 31, 45, 0.55);
+      border: 3px solid rgba(91, 192, 248, 0.85);
+      box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.7);
+      color: #7fd3ff;
+      font-size: 2rem;
+      line-height: 1;
+      font-family: inherit;
+      touch-action: none;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .steer-btn.pressed {
+      background: rgba(91, 192, 248, 0.85);
+      color: #04121f;
+      transform: translate(4px, 4px);
+      box-shadow: 0 0 0 #000;
     }
 
     /* ── Leaderboard ───────────────────────────────────── */
@@ -356,7 +394,7 @@
 <div class="panel" id="start-panel">
   <div class="card">
     <h1>STRAIT OF HORMUZ</h1>
-    <p class="tagline">Navigate the world's most contested chokepoint.</p>
+    <p class="tagline">The world's most contested chokepoint.</p>
 
     <span class="field-label" id="flag-label">Choose your flag of convenience</span>
     <div class="flag-row" id="flag-row" role="radiogroup" aria-labelledby="flag-label">
@@ -390,7 +428,7 @@
     <input type="text" id="tanker-name" placeholder="MV CRUDE JUSTICE" maxlength="22"
            autocomplete="off" spellcheck="false" autocapitalize="characters" />
     <button class="btn-primary" id="deploy-btn">⚓ DEPLOY</button>
-    <p class="controls-hint">Steer by tapping the left or right side of the screen, or use <kbd>←</kbd> <kbd>→</kbd> / <kbd>A</kbd> <kbd>D</kbd>.</p>
+    <p class="controls-hint" id="controls-hint">Steer by tapping the left or right side of the screen, or use <kbd>←</kbd> <kbd>→</kbd> / <kbd>A</kbd> <kbd>D</kbd>.</p>
     <p class="version" id="version"></p>
   </div>
 </div>
@@ -422,6 +460,11 @@
 
 <canvas id="c"></canvas>
 
+<div id="touch-controls" class="hidden" aria-hidden="true">
+  <button class="steer-btn" id="steer-left"  tabindex="-1">◀</button>
+  <button class="steer-btn" id="steer-right" tabindex="-1">▶</button>
+</div>
+
 <script>
 'use strict';
 
@@ -429,7 +472,7 @@
 const canvas = document.getElementById('c');
 const ctx    = canvas.getContext('2d');
 // Bump on every change so it's obvious on a phone whether a fresh copy loaded.
-const VERSION = 'v1.6';
+const VERSION = 'v1.7';
 const LW = 400, LH = 720;
 const MONO = "ui-monospace, 'SF Mono', Menlo, Consolas, 'DejaVu Sans Mono', 'Courier New', monospace";
 
@@ -506,6 +549,7 @@ let hitFlash      = 0;
 // ── input ───────────────────────────────────────────────────────
 const keys   = { left: false, right: false };
 const touch  = { left: false, right: false };
+const btns   = { left: false, right: false };   // on-screen arrow buttons
 
 document.addEventListener('keydown', e => {
   if (e.key === 'ArrowLeft'  || e.key === 'a' || e.key === 'A') keys.left  = true;
@@ -1890,8 +1934,8 @@ function update(dt) {
   if (hitFlash  > 0) hitFlash  = Math.max(0, hitFlash  - dt * 2);
 
   // player movement
-  const goL = keys.left  || touch.left;
-  const goR = keys.right || touch.right;
+  const goL = keys.left  || touch.left  || btns.left;
+  const goR = keys.right || touch.right || btns.right;
   if (goL) player.x -= PLAYER_SPD * dt;
   if (goR) player.x += PLAYER_SPD * dt;
   const plb = shoreLeftAt(PLAYER_Y)  + TW / 2 + 2;
@@ -2504,6 +2548,38 @@ function startGame() {
 }
 
 // ── UI ───────────────────────────────────────────────────────────
+const IS_TOUCH = (window.matchMedia && matchMedia('(pointer: coarse)').matches)
+              || 'ontouchstart' in window;
+const touchControls = document.getElementById('touch-controls');
+
+if (IS_TOUCH) {
+  document.getElementById('controls-hint').textContent =
+    'Steer with the ◀ ▶ buttons at the bottom, or tap either side of the screen.';
+  for (const side of ['left', 'right']) {
+    const b = document.getElementById('steer-' + side);
+    const press   = e => { e.preventDefault(); btns[side] = true;  b.classList.add('pressed'); };
+    const release = e => { e.preventDefault(); btns[side] = false; b.classList.remove('pressed'); };
+    b.addEventListener('pointerdown', e => { b.setPointerCapture?.(e.pointerId); press(e); });
+    b.addEventListener('pointerup', release);
+    b.addEventListener('pointercancel', release);
+    b.addEventListener('lostpointercapture', release);
+    b.addEventListener('contextmenu', e => e.preventDefault());
+  }
+}
+
+// only show the buttons while actually sailing
+let controlsShown = false;
+function syncTouchControls() {
+  const want = IS_TOUCH && (state === 'playing' || state === 'dying');
+  if (want === controlsShown) return;
+  controlsShown = want;
+  touchControls.classList.toggle('hidden', !want);
+  if (!want) {
+    btns.left = btns.right = false;
+    touchControls.querySelectorAll('.pressed').forEach(b => b.classList.remove('pressed'));
+  }
+}
+
 document.getElementById('version').textContent = VERSION;
 
 document.getElementById('flag-row').addEventListener('click', e => {
@@ -2539,6 +2615,7 @@ function loop(ts) {
   lastTs = ts;
   update(dt);
   draw();
+  syncTouchControls();
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
