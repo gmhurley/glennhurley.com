@@ -451,15 +451,15 @@ const MAX_SCROLL  = 310;
 const SCROLL_ACCEL = 5;
 const NM_PX = 180;
 const FINISH_NM = 100;          // strait length — game ends here
-const HIT_INVUL = 0.7;          // seconds of invulnerability after a non-fatal hit
+const HIT_INVUL = 1.0;          // seconds of invulnerability after a non-fatal hit
 
 // damage per obstacle type (out of 100)
 const DMG = {
   mine:    100,   // contact mine = ship-killer
-  missile:  45,
+  missile:  35,
   drone:    25,
   boat:     12,   // ramming damage from a fast boat
-  rpg:      18,   // RPG round fired by a fast boat
+  rpg:      14,   // RPG round fired by a fast boat
 };
 
 // ── flags ───────────────────────────────────────────────────────
@@ -532,7 +532,7 @@ window.addEventListener('mouseup',   () => { touch.left = touch.right = false; }
 // ── obstacle definitions ─────────────────────────────────────────
 const OBS = [
   { id: 'mine',    label: 'NAVAL MINE', color: '#aaaaaa', r: 18, baseSpeed:   0, pattern: 'drift',  weight: 1 },
-  { id: 'boat',    label: 'IRGCN BOAT', color: '#bbb8aa', r: 12, baseSpeed: 170, pattern: 'zigzag', weight: 4 },
+  { id: 'boat',    label: 'IRGCN BOAT', color: '#bbb8aa', r: 12, baseSpeed: 170, pattern: 'zigzag', weight: 3 },
   { id: 'drone',   label: 'SHAHED-136', color: '#d4cdb0', r: 11, baseSpeed:  95, pattern: 'sine',   weight: 2 },
   { id: 'missile', label: 'ANTI-SHIP',  color: '#ff4400', r:  7, baseSpeed: 210, pattern: 'homing', weight: 2 },
 ];
@@ -542,7 +542,8 @@ function pickType() {
   const pool = [];
   for (const t of OBS) {
     let w = t.weight;
-    if (t.id === 'missile' || t.id === 'drone') w += progress * 3;
+    if (t.id === 'missile') w += progress * 3;
+    if (t.id === 'drone')   w += progress * 1.5;
     for (let i = 0; i < Math.round(w); i++) pool.push(t);
   }
   return pool[Math.floor(Math.random() * pool.length)];
@@ -562,7 +563,7 @@ function spawnObs() {
     driftClock: 0,
     age: 0,
     r: def.r,
-    shootClock: def.id === 'boat' ? 0.6 + Math.random() * 0.6 : 0,
+    shootClock: def.id === 'boat' ? 0.15 + Math.random() * 0.3 : 0,
     dead: false,
   });
 }
@@ -841,6 +842,36 @@ function drawShoreLabels() {
   }
 }
 
+// Browsers disagree about how wide a flag emoji is (some measure the two
+// regional-indicator letters, not the drawn flag), so textAlign:center drifts.
+// Render each flag once offscreen, find its real pixel bounds, and draw that.
+const flagCache = {};
+function flagSprite(flag) {
+  if (flagCache[flag]) return flagCache[flag];
+  const S = 4, size = 14;                       // 4x supersampled for sharpness
+  const c = document.createElement('canvas');
+  c.width = size * 4 * S; c.height = size * 2 * S;
+  const x = c.getContext('2d');
+  x.font = (size * S) + 'px serif';
+  x.textBaseline = 'middle';
+  x.fillText(flag, size * S, c.height / 2);
+  const d = x.getImageData(0, 0, c.width, c.height).data;
+  let x0 = c.width, x1 = -1, y0 = c.height, y1 = -1;
+  for (let py = 0; py < c.height; py++) {
+    for (let px = 0; px < c.width; px++) {
+      if (d[(py * c.width + px) * 4 + 3] > 8) {
+        if (px < x0) x0 = px; if (px > x1) x1 = px;
+        if (py < y0) y0 = py; if (py > y1) y1 = py;
+      }
+    }
+  }
+  if (x1 < 0) { x0 = 0; y0 = 0; x1 = 1; y1 = 1; }   // nothing drew; avoid a zero-size sprite
+  const out = document.createElement('canvas');
+  out.width = x1 - x0 + 1; out.height = y1 - y0 + 1;
+  out.getContext('2d').drawImage(c, -x0, -y0);
+  return (flagCache[flag] = { img: out, w: out.width / S, h: out.height / S });
+}
+
 // Old-school map lettering: bold text with a dark outline, flag stacked on top.
 function drawMapLabel(flag, lines, side, coastX, cy, color) {
   ctx.save();
@@ -853,10 +884,10 @@ function drawMapLabel(flag, lines, side, coastX, cy, color) {
   let cx = side === 'left' ? coastX / 2 : (coastX + LW) / 2;
   cx = Math.max(3 + w / 2, Math.min(LW - 3 - w / 2, cx));
 
-  ctx.font = '14px serif';
+  const fl = flagSprite(flag);
   ctx.shadowColor = 'rgba(0,0,0,0.6)';
   ctx.shadowBlur = 3;
-  ctx.fillText(flag, cx, top + flagH / 2);
+  ctx.drawImage(fl.img, cx - fl.w / 2, top + (flagH - fl.h) / 2, fl.w, fl.h);
   ctx.shadowBlur = 0;
 
   ctx.font = 'bold 12px ' + MONO;
@@ -1709,17 +1740,28 @@ function updateObs(o, dt) {
       if (o.driftClock > 1.6) { o.driftDir *= -1; o.driftClock = 0; }
       o.x += o.driftDir * 20 * dt;
       break;
-    case 'zigzag':
-      o.vx = Math.sin(o.age * 3 + o.phase) * 160;
-      o.x += o.vx * dt;
+    // Boats and drones weave around a "lane" centre instead of integrating
+    // velocity, so they can't get pinned against the shore. The lane is kept
+    // far enough from both banks that the full weave stays on the water.
+    case 'zigzag':      // IRGCN boats: tight weave, lane creeps toward the tanker
+    case 'sine': {      // drones: wide lazy weave, mostly hold their lane
+      const zig  = o.type.pattern === 'zigzag';
+      const amp  = zig ? 48 : 60;
+      const freq = zig ? 3 : 2;
+      if (o.lane === undefined) o.lane = o.x;
+      o.lane += (player.x - o.lane) * (zig ? 0.35 : 0.08) * dt;
+      const lo = shoreLeftAt(o.y)  + o.r + 6 + amp;
+      const hi = shoreRightAt(o.y) - o.r - 6 - amp;
+      o.lane = lo < hi ? Math.max(lo, Math.min(hi, o.lane)) : (lo + hi) / 2;
+      const nx = o.lane + Math.sin(o.age * freq + o.phase) * amp;
+      o.vx = (nx - o.x) / Math.max(dt, 1e-4);
+      o.x  = nx;
       break;
-    case 'sine':
-      o.x += Math.sin(o.age * 2 + o.phase) * 130 * dt;
-      break;
+    }
     case 'homing': {
       const dx = player.x - o.x;
-      o.vx += dx * 1.5 * dt;
-      o.vx = Math.max(-180, Math.min(180, o.vx));
+      o.vx += dx * 1.1 * dt;
+      o.vx = Math.max(-150, Math.min(150, o.vx));
       o.x += o.vx * dt;
       break;
     }
@@ -1729,8 +1771,8 @@ function updateObs(o, dt) {
   const orb = shoreRightAt(o.y) - o.r - 2;
   o.x = Math.max(olb, Math.min(orb, o.x));
 
-  // boats fire warning shots that always miss
-  if (o.type.id === 'boat' && o.y > 30 && o.y < LH * 0.55) {
+  // boats fire RPGs at the tanker while they're ahead of it
+  if (o.type.id === 'boat' && o.y > 10 && o.y < player.y - 90) {
     o.shootClock -= dt;
     if (o.shootClock <= 0) {
       o.shootClock = 0.9 + Math.random() * 0.6;
@@ -1739,10 +1781,16 @@ function updateObs(o, dt) {
   }
 }
 
+// The tanker is long and thin, so collide against a capsule running down its
+// centreline (bow to stern) rather than a single circle in the middle.
+const HULL_R    = TW / 2 - 3;           // half-beam, a touch forgiving
+const HULL_HALF = TH / 2 - HULL_R;      // half-length of the centreline segment
+function hullDist(x, y) {
+  const dy = Math.max(-HULL_HALF, Math.min(HULL_HALF, y - player.y));
+  return Math.hypot(x - player.x, y - (player.y + dy));
+}
 function hits(o) {
-  const dx = o.x - player.x;
-  const dy = o.y - player.y;
-  return Math.sqrt(dx * dx + dy * dy) < o.r + Math.min(TW, TH) * 0.36;
+  return hullDist(o.x, o.y) < o.r * 0.8 + HULL_R;
 }
 
 function update(dt) {
@@ -1779,7 +1827,7 @@ function update(dt) {
 
   // obstacle spawning — only while still under way
   if (!atFinish) {
-    spawnInterval = Math.max(0.55, 1.8 - (distance / NM_PX) * 0.012);
+    spawnInterval = Math.max(0.65, 1.8 - (distance / NM_PX) * 0.012);
     spawnClock += dt;
     if (spawnClock >= spawnInterval) {
       spawnClock = 0;
@@ -1803,10 +1851,7 @@ function update(dt) {
   if (invulTimer <= 0) {
     for (const b of bullets) {
       if (b.age >= b.life) continue;
-      const dx = b.x - player.x;
-      const dy = b.y - player.y;
-      const rr = (b.r ?? 5) + Math.min(TW, TH) * 0.36;
-      if (dx * dx + dy * dy < rr * rr) {
+      if (hullDist(b.x, b.y) < (b.r ?? 5) + HULL_R) {
         damage = Math.min(100, damage + DMG.rpg);
         hitFlash = 1;
         boom(b.x, b.y, '#ffaa44', 14);
