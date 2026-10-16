@@ -6,6 +6,19 @@
   <title>Strait of Hormuz | Glenn Hurley</title>
   <link rel="icon" href="/favicon.ico" />
   <style>
+    :root {
+      /* chunkier, more legible monospace than Courier on phones; Courier as fallback */
+      --mono: ui-monospace, 'SF Mono', Menlo, Consolas, 'DejaVu Sans Mono', 'Courier New', monospace;
+      --navy: #0d1f2d;
+      --navy-deep: #0a1828;
+      --cyan: #5bc0f8;
+      --cyan-hi: #7fd3ff;
+      --text: #e0e8f0;
+      --text-dim: #a9c2d8;
+      --line: #2c4c68;
+      --yellow: #ffd54a;
+      --red: #ff7a7a;
+    }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
@@ -15,7 +28,7 @@
       justify-content: center;
       height: 100dvh;
       overflow: hidden;
-      font-family: 'Courier New', Courier, monospace;
+      font-family: var(--mono);
       touch-action: none;
       user-select: none;
     }
@@ -28,206 +41,308 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(0, 10, 20, 0.90);
+      background: rgba(0, 10, 20, 0.88);
       z-index: 10;
     }
     .panel.hidden { display: none; }
 
+    /* ── Retro terminal card (start screen + leaderboard) ── */
     .card {
-      background: #0d1f2d;
-      border: 2px solid #2a5f8f;
-      border-radius: 14px;
-      padding: 24px 20px;
-      width: min(360px, 92vw);
-      color: #e0e8f0;
+      position: relative;
+      background:
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 3px),
+        var(--navy);
+      border: 3px solid var(--cyan);
+      border-radius: 0;
+      box-shadow:
+        inset 0 0 0 3px var(--navy),
+        inset 0 0 0 5px var(--line),
+        8px 8px 0 #000;
+      padding: 24px 20px 20px;
+      width: min(380px, 92vw);
+      max-height: calc(100dvh - 24px);
+      overflow-y: auto;
+      touch-action: pan-y; /* body is touch-action: none; let the card scroll on short screens */
+      color: var(--text);
       text-align: center;
     }
 
     .card h1 {
-      font-size: 1.45rem;
-      letter-spacing: 0.06em;
-      color: #5bc0f8;
-      margin-bottom: 2px;
+      font-size: 1.75rem;
+      line-height: 1.1;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      color: var(--cyan-hi);
+      text-shadow: 3px 3px 0 #000, 0 0 12px rgba(91, 192, 248, 0.45);
+      margin-bottom: 8px;
     }
     .tagline {
-      font-size: 0.68rem;
-      color: #557799;
-      margin-bottom: 18px;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      margin-bottom: 20px;
     }
+
+    .field-label {
+      display: block;
+      text-align: left;
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: #c9dcee;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .field-label::before { content: '▸ '; color: var(--cyan); }
 
     .flag-row {
       display: flex;
+      flex-direction: column;
       gap: 8px;
-      margin-bottom: 18px;
+      margin-bottom: 20px;
     }
     .flag-opt {
-      flex: 1;
-      background: #0a1828;
-      border: 2px solid #1e3a52;
-      border-radius: 10px;
-      padding: 10px 6px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      text-align: left;
+      background: var(--navy-deep);
+      border: 2px solid var(--line);
+      border-radius: 0;
+      padding: 10px 12px;
       cursor: pointer;
-      color: #c0d8f0;
-      transition: border-color .15s, background .15s;
+      color: var(--text);
+      transition: border-color .12s, background .12s;
       font-family: inherit;
     }
-    .flag-opt .flag-em { font-size: 1.6rem; display: block; line-height: 1; margin-bottom: 5px; }
-    .flag-opt .flag-name { font-size: 0.7rem; font-weight: bold; display: block; }
-    .flag-opt .flag-note { font-size: 0.56rem; color: #445566; margin-top: 4px; line-height: 1.4; }
-    .flag-opt.sel { border-color: #5bc0f8; background: #0a2038; }
+    .flag-opt:hover { border-color: #4a7ca6; }
+    .flag-opt:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+    .flag-opt .flag-em { font-size: 2rem; line-height: 1; flex: none; }
+    .flag-opt .flag-text { flex: 1; min-width: 0; }
+    .flag-opt .flag-name {
+      display: block;
+      font-size: 0.95rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: #f0f6fc;
+    }
+    .flag-opt .flag-note { display: block; font-size: 0.8rem; color: var(--text-dim); margin-top: 3px; }
+    .flag-opt .flag-check {
+      flex: none;
+      width: 22px;
+      height: 22px;
+      border: 2px solid #4a6a88;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: transparent;
+    }
+    .flag-opt.sel { border-color: var(--cyan); background: #12304d; box-shadow: 4px 4px 0 #000; }
+    .flag-opt.sel .flag-check { background: var(--cyan); border-color: var(--cyan); color: #04121f; }
 
     #tanker-name {
       width: 100%;
-      background: #0a1828;
-      border: 2px solid #1e3a52;
-      border-radius: 8px;
-      padding: 10px 12px;
-      color: #e0e8f0;
+      background: var(--navy-deep);
+      border: 2px solid var(--line);
+      border-radius: 0;
+      padding: 12px;
+      color: #f0f6fc;
       font-family: inherit;
-      font-size: 0.9rem;
+      font-size: 1rem; /* 16px+ stops iOS zooming in on focus */
+      font-weight: bold;
       text-align: center;
-      letter-spacing: 0.08em;
-      margin-bottom: 16px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
       outline: none;
-      transition: border-color .15s;
+      transition: border-color .12s;
     }
-    #tanker-name:focus { border-color: #5bc0f8; }
-    #tanker-name::placeholder { color: #2a3a4a; }
+    #tanker-name:focus { border-color: var(--cyan); }
+    #tanker-name::placeholder { color: #7f98b0; font-weight: normal; }
 
+    /* chunky arcade button with a hard shadow that "presses" in */
     .btn-primary {
       width: 100%;
-      background: #1a508a;
-      border: none;
-      border-radius: 8px;
+      background: var(--yellow);
+      border: 3px solid #000;
+      border-radius: 0;
       padding: 13px;
-      color: #e0f0ff;
+      color: #1a1300;
       font-family: inherit;
-      font-size: 1rem;
-      font-weight: bold;
-      letter-spacing: 0.08em;
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
       cursor: pointer;
-      transition: background .15s;
+      box-shadow: 4px 4px 0 #000;
+      transition: transform .06s, box-shadow .06s, background .12s;
     }
-    .btn-primary:hover { background: #2060a0; }
-    .btn-primary:active { background: #104070; }
+    .btn-primary:hover { background: #ffe07a; }
+    .btn-primary:active { transform: translate(4px, 4px); box-shadow: 0 0 0 #000; }
+    .btn-primary:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 
+    .controls-hint {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-top: 16px;
+      line-height: 1.5;
+    }
+    .controls-hint kbd {
+      font-family: inherit;
+      font-size: 0.75rem;
+      color: var(--text);
+      background: #1a3248;
+      border: 1px solid #36597a;
+      box-shadow: 1px 1px 0 #000;
+      padding: 0 5px;
+    }
+
+    /* ── Leaderboard ───────────────────────────────────── */
     .death-msg {
-      font-size: 0.78rem;
-      color: #cc4444;
-      margin-bottom: 14px;
-      line-height: 1.6;
-      min-height: 2.4em;
+      font-size: 0.9rem;
+      font-weight: bold;
+      line-height: 1.5;
+      color: var(--red);
+      text-align: left;
+      border: 2px solid var(--red);
+      background: rgba(255, 90, 90, 0.08);
+      padding: 10px 12px;
+      margin-bottom: 12px;
     }
-    .lb-title { font-size: 1.05rem; color: #5bc0f8; margin-bottom: 12px; letter-spacing: .06em; }
+    .death-msg:empty { display: none; }
+    .death-msg::before { content: '☠ '; }
 
-    .lb-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; margin-bottom: 18px; }
-    .lb-table th { color: #446677; font-weight: normal; padding: 4px 6px; text-align: left; border-bottom: 1px solid #1e3a52; letter-spacing: .04em; }
-    .lb-table td { padding: 5px 6px; color: #a0c0d8; }
-    .lb-table tr.you td { color: #ffd700; }
-    .lb-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+    .run-stats {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      margin-bottom: 18px;
+    }
+    .run-stats b { color: #f0f6fc; font-size: 1rem; }
 
-    /* ── Cartoon dialog ───────────────────────────────── */
+    .lb-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--cyan-hi);
+      text-shadow: 2px 2px 0 #000;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+    }
+
+    .lb-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 0.8rem;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .lb-table th {
+      color: var(--text-dim);
+      font-weight: bold;
+      padding: 5px 4px;
+      border-bottom: 2px solid var(--line);
+      letter-spacing: 0.04em;
+    }
+    .lb-table td {
+      padding: 6px 4px;
+      color: #d4e3f0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .lb-table th:nth-child(1) { width: 2em; }
+    .lb-table th:nth-child(3) { width: 3.2em; }
+    .lb-table th:nth-child(4) { width: 3.6em; }
+    .lb-table th:nth-child(5) { width: 4.6em; }
+    .lb-table tr:nth-child(even) td { background: rgba(255,255,255,0.04); }
+    .lb-table tr.you td { color: var(--yellow); font-weight: bold; background: rgba(255, 213, 74, 0.1); }
+
+    /* ── Boss radio transmission ───────────────────────── */
     #dialog-panel {
       background: transparent;
       pointer-events: none;
       align-items: flex-start;
       justify-content: center;
-      padding-top: 4vh;
+      padding-top: 5vh;
     }
-    #dialog-panel .toon { pointer-events: auto; }
+    #dialog-panel .radio { pointer-events: auto; }
 
-    .toon {
-      position: relative;
-      background: #fffbe8;
-      border: 4px solid #1a1a1a;
-      border-radius: 22px;
-      padding: 18px 18px 14px;
-      width: min(290px, 80vw);
-      font-family: 'Comic Sans MS', 'Marker Felt', 'Trebuchet MS', sans-serif;
-      color: #1a1a1a;
-      box-shadow: 4px 4px 0 #1a1a1a;
-      animation: toon-pop .2s cubic-bezier(.4, 1.7, .6, 1);
+    .radio {
+      width: min(320px, 86vw);
+      background:
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 3px),
+        #1a1405;
+      border: 3px solid var(--yellow);
+      box-shadow: inset 0 0 0 3px #1a1405, inset 0 0 0 5px #6b5617, 8px 8px 0 #000;
+      color: #fff3c4;
+      animation: radio-in .25s steps(4);
     }
-    @keyframes toon-pop {
-      0%   { transform: scale(.55) rotate(-3deg); opacity: 0; }
-      70%  { transform: scale(1.05) rotate(1deg); opacity: 1; }
-      100% { transform: scale(1)    rotate(0);    opacity: 1; }
+    @keyframes radio-in {
+      from { transform: scaleY(0.05); opacity: 0.3; }
+      to   { transform: scaleY(1);    opacity: 1; }
     }
 
-    .toon-name {
-      position: absolute;
-      top: -14px;
-      left: 18px;
-      background: #1a1a1a;
-      color: #ffe060;
-      padding: 3px 10px;
-      border-radius: 8px;
-      font-size: 10px;
+    .radio-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--yellow);
+      color: #1a1300;
+      padding: 6px 10px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+    .radio-dot {
+      width: 9px;
+      height: 9px;
+      background: #d42020;
+      flex: none;
+      animation: blink 0.8s steps(1) infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .radio-from {
+      padding: 12px 14px 0;
+      font-size: 0.75rem;
       font-weight: bold;
       letter-spacing: 0.06em;
-      text-transform: uppercase;
-      font-family: 'Trebuchet MS', sans-serif;
+      color: var(--yellow);
+    }
+    .radio-msg {
+      padding: 8px 14px 4px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .radio-msg b { color: #fff; }
+    .radio-msg::after {
+      content: '█';
+      margin-left: 2px;
+      animation: blink 0.8s steps(1) infinite;
     }
 
-    /* tail of the speech bubble — points down toward the boss ship */
-    .toon::after {
-      content: '';
-      position: absolute;
-      bottom: -22px;
-      left: 50%;
-      margin-left: -14px;
-      width: 0;
-      height: 0;
-      border-left: 14px solid transparent;
-      border-right: 14px solid transparent;
-      border-top: 22px solid #1a1a1a;
-    }
-    .toon::before {
-      content: '';
-      position: absolute;
-      bottom: -13px;
-      left: 50%;
-      margin-left: -9px;
-      width: 0;
-      height: 0;
-      border-left: 9px solid transparent;
-      border-right: 9px solid transparent;
-      border-top: 15px solid #fffbe8;
-      z-index: 1;
-    }
-
-    .toon-msg {
-      font-size: 14px;
-      line-height: 1.45;
-      color: #1a1a1a;
-    }
-    .toon-msg b { font-weight: bold; }
-
-    .toon-buttons {
-      display: flex;
-      justify-content: center;
-      margin-top: 14px;
-    }
-    .toon-btn {
-      background: #ffe060;
-      border: 3px solid #1a1a1a;
-      border-radius: 12px;
-      padding: 6px 26px;
+    .radio-btn {
+      display: block;
+      margin: 14px auto 16px;
+      background: var(--yellow);
+      border: 3px solid #000;
+      padding: 8px 34px;
       font-family: inherit;
-      font-size: 14px;
-      font-weight: bold;
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      color: #1a1300;
       cursor: pointer;
-      color: #1a1a1a;
-      box-shadow: 3px 3px 0 #1a1a1a;
-      transition: transform .08s, box-shadow .08s;
+      box-shadow: 4px 4px 0 #000;
+      transition: transform .06s, box-shadow .06s;
     }
-    .toon-btn:hover { background: #ffe880; }
-    .toon-btn:active {
-      transform: translate(3px, 3px);
-      box-shadow: 0 0 0 #1a1a1a;
-    }
+    .radio-btn:hover { background: #ffe07a; }
+    .radio-btn:active { transform: translate(4px, 4px); box-shadow: 0 0 0 #000; }
   </style>
 </head>
 <body>
@@ -235,34 +350,51 @@
 <div class="panel" id="start-panel">
   <div class="card">
     <h1>STRAIT OF HORMUZ</h1>
-    <div class="tagline">navigate the world's most contested chokepoint</div>
-    <div style="font-size:.63rem;color:#334455;margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em;">Select your flag of convenience:</div>
-    <div class="flag-row" id="flag-row">
-      <button class="flag-opt sel" data-idx="0">
-        <span class="flag-em">🇲🇳</span>
-        <span class="flag-name">MONGOLIA</span>
-        <div class="flag-note">Landlocked<br>since forever</div>
+    <p class="tagline">Navigate the world's most contested chokepoint.</p>
+
+    <span class="field-label" id="flag-label">Choose your flag of convenience</span>
+    <div class="flag-row" id="flag-row" role="radiogroup" aria-labelledby="flag-label">
+      <button type="button" class="flag-opt sel" data-idx="0" role="radio" aria-checked="true">
+        <span class="flag-em" aria-hidden="true">🇲🇳</span>
+        <span class="flag-text">
+          <span class="flag-name">Mongolia</span>
+          <span class="flag-note">Landlocked since forever.</span>
+        </span>
+        <span class="flag-check" aria-hidden="true">✓</span>
       </button>
-      <button class="flag-opt" data-idx="1">
-        <span class="flag-em">🇲🇭</span>
-        <span class="flag-name">MARSHALL IS.</span>
-        <div class="flag-note">Currently<br>sinking</div>
+      <button type="button" class="flag-opt" data-idx="1" role="radio" aria-checked="false">
+        <span class="flag-em" aria-hidden="true">🇲🇭</span>
+        <span class="flag-text">
+          <span class="flag-name">Marshall Islands</span>
+          <span class="flag-note">Currently sinking.</span>
+        </span>
+        <span class="flag-check" aria-hidden="true">✓</span>
       </button>
-      <button class="flag-opt" data-idx="2">
-        <span class="flag-em">🇹🇻</span>
-        <span class="flag-name">TUVALU</span>
-        <div class="flag-note">Pop. 11,000.<br>Mostly fish.</div>
+      <button type="button" class="flag-opt" data-idx="2" role="radio" aria-checked="false">
+        <span class="flag-em" aria-hidden="true">🇹🇻</span>
+        <span class="flag-text">
+          <span class="flag-name">Tuvalu</span>
+          <span class="flag-note">Pop. 11,000. Mostly fish.</span>
+        </span>
+        <span class="flag-check" aria-hidden="true">✓</span>
       </button>
     </div>
-    <input type="text" id="tanker-name" placeholder="NAME YOUR TANKER" maxlength="22"
+
+    <label class="field-label" for="tanker-name">Name your tanker</label>
+    <input type="text" id="tanker-name" placeholder="MV CRUDE JUSTICE" maxlength="22"
            autocomplete="off" spellcheck="false" autocapitalize="characters" />
     <button class="btn-primary" id="deploy-btn">⚓ DEPLOY</button>
+    <p class="controls-hint">Steer by tapping the left or right side of the screen, or use <kbd>←</kbd> <kbd>→</kbd> / <kbd>A</kbd> <kbd>D</kbd>.</p>
   </div>
 </div>
 
 <div class="panel hidden" id="lb-panel">
   <div class="card">
     <div class="death-msg" id="death-msg"></div>
+    <div class="run-stats">
+      <span>DISTANCE <b id="run-nm">0</b> NM</span>
+      <span>HULL DMG <b id="run-dmg">0</b>%</span>
+    </div>
     <div class="lb-title">HALL OF FALLEN TANKERS</div>
     <table class="lb-table">
       <thead><tr><th>#</th><th>TANKER</th><th>NM</th><th>DMG</th><th>DATE</th></tr></thead>
@@ -273,12 +405,11 @@
 </div>
 
 <div class="panel hidden" id="dialog-panel">
-  <div class="toon">
-    <div class="toon-name">USS MANIFEST DESTINY</div>
-    <div class="toon-msg" id="dialog-msg"></div>
-    <div class="toon-buttons">
-      <button class="toon-btn" id="dialog-ok">AYE!</button>
-    </div>
+  <div class="radio" role="alertdialog" aria-labelledby="radio-head" aria-describedby="dialog-msg">
+    <div class="radio-head" id="radio-head"><span class="radio-dot"></span>INCOMING TRANSMISSION</div>
+    <div class="radio-from">FROM: USS MANIFEST DESTINY</div>
+    <div class="radio-msg" id="dialog-msg"></div>
+    <button class="radio-btn" id="dialog-ok">AYE!</button>
   </div>
 </div>
 
@@ -1791,6 +1922,8 @@ function showLeaderboard() {
   const lb = saveLB(entry);
 
   document.getElementById('death-msg').textContent = deathReason;
+  document.getElementById('run-nm').textContent = nm;
+  document.getElementById('run-dmg').textContent = dmg;
 
   const tbody = document.getElementById('lb-body');
   tbody.innerHTML = '';
@@ -1800,7 +1933,7 @@ function showLeaderboard() {
     const d = e.damage ?? 100;
     tr.innerHTML =
       `<td>${i + 1}</td>` +
-      `<td>${e.flag} ${e.name}</td>` +
+      `<td>${e.flag} ${escapeHtml(e.name)}</td>` +
       `<td>${e.nm}</td>` +
       `<td>${d}%</td>` +
       `<td>${e.date}</td>`;
@@ -1843,8 +1976,10 @@ document.getElementById('flag-row').addEventListener('click', e => {
   const btn = e.target.closest('[data-idx]');
   if (!btn) return;
   selectedFlag = parseInt(btn.dataset.idx);
-  document.querySelectorAll('.flag-opt').forEach(b => b.classList.remove('sel'));
-  btn.classList.add('sel');
+  document.querySelectorAll('.flag-opt').forEach(b => {
+    b.classList.toggle('sel', b === btn);
+    b.setAttribute('aria-checked', b === btn ? 'true' : 'false');
+  });
 });
 
 document.getElementById('deploy-btn').addEventListener('click', () => {
