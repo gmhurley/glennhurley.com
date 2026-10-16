@@ -189,6 +189,12 @@
       margin-top: 16px;
       line-height: 1.5;
     }
+    .version {
+      margin-top: 12px;
+      font-size: 0.7rem;
+      color: #7f98b0;
+      letter-spacing: 0.08em;
+    }
     .controls-hint kbd {
       font-family: inherit;
       font-size: 0.75rem;
@@ -385,6 +391,7 @@
            autocomplete="off" spellcheck="false" autocapitalize="characters" />
     <button class="btn-primary" id="deploy-btn">⚓ DEPLOY</button>
     <p class="controls-hint">Steer by tapping the left or right side of the screen, or use <kbd>←</kbd> <kbd>→</kbd> / <kbd>A</kbd> <kbd>D</kbd>.</p>
+    <p class="version" id="version"></p>
   </div>
 </div>
 
@@ -421,6 +428,8 @@
 // ── canvas / scaling ────────────────────────────────────────────
 const canvas = document.getElementById('c');
 const ctx    = canvas.getContext('2d');
+// Bump on every change so it's obvious on a phone whether a fresh copy loaded.
+const VERSION = 'v1.6';
 const LW = 400, LH = 720;
 const MONO = "ui-monospace, 'SF Mono', Menlo, Consolas, 'DejaVu Sans Mono', 'Courier New', monospace";
 
@@ -1746,12 +1755,14 @@ function updateObs(o, dt) {
     case 'zigzag':      // IRGCN boats: tight weave, lane creeps toward the tanker
     case 'sine': {      // drones: wide lazy weave, mostly hold their lane
       const zig  = o.type.pattern === 'zigzag';
-      const amp  = zig ? 48 : 60;
+      const amp  = zig ? 48 : 42;
       const freq = zig ? 3 : 2;
+      // drones are drawn ~1.6x their hit radius, so give them extra clearance
+      const clear = zig ? o.r + 10 : o.r * 1.6 + 22;
       if (o.lane === undefined) o.lane = o.x;
-      o.lane += (player.x - o.lane) * (zig ? 0.35 : 0.08) * dt;
-      const lo = shoreLeftAt(o.y)  + o.r + 6 + amp;
-      const hi = shoreRightAt(o.y) - o.r - 6 - amp;
+      o.lane += (player.x - o.lane) * (zig ? 0.35 : 0.3) * dt;
+      const lo = shoreLeftAt(o.y)  + clear + amp;
+      const hi = shoreRightAt(o.y) - clear - amp;
       o.lane = lo < hi ? Math.max(lo, Math.min(hi, o.lane)) : (lo + hi) / 2;
       const nx = o.lane + Math.sin(o.age * freq + o.phase) * amp;
       o.vx = (nx - o.x) / Math.max(dt, 1e-4);
@@ -2123,18 +2134,33 @@ let bomberClock = 8;
 const BOMB_FALL = 0.75;
 
 function launchBombers() {
+  // Pick a target on the Iranian shore, a random heading (anything from
+  // diving down-right to climbing up-right), and back-track to where the
+  // plane enters on the left so its path runs straight over the target.
+  const ty  = 110 + Math.random() * (LH - 260);
+  const rx  = shoreRightAt(ty);
+  const tx  = rx + 8 + Math.random() * Math.max(2, LW - rx - 14);
+  const ang = (Math.random() * 2 - 1) * 0.7;           // about ±40°
+  const spd = 160 + Math.random() * 50;
+  const dx  = Math.cos(ang), dy = Math.sin(ang);
+  const back = (tx + 70) / dx;                          // distance back to x = -70
   const n  = Math.random() < 0.4 ? 2 : 1;
-  const y0 = 90 + Math.random() * LH * 0.45;
-  const vx = 150 + Math.random() * 40;
   for (let i = 0; i < n; i++) {
-    const plane = { x: -60 - i * 45, y: y0 + i * 38, vx, targets: [] };
-    // pick 2-3 spots on the Iranian shore and work out where to release for each
+    // wingman sits behind and off to the side
+    const offA = -i * 50, offP = i * 40;
+    const plane = {
+      x: tx - dx * back + dx * offA - dy * offP,
+      y: ty - dy * back + dy * offA + dx * offP,
+      vx: dx * spd, vy: dy * spd, ang, targets: [],
+    };
+    // 2-3 bombs walked along the track around the aim point
     const k = 2 + (Math.random() < 0.5 ? 1 : 0);
     for (let j = 0; j < k; j++) {
-      const ty = plane.y + (j - 1) * 14;
-      const rx = shoreRightAt(ty);
-      const tx = rx + 6 + Math.random() * Math.max(2, LW - rx - 12);
-      plane.targets.push({ tx, releaseX: tx - vx * 0.55 * BOMB_FALL });
+      const along = (j - (k - 1) / 2) * 12;
+      const aimX = tx + dx * along - dy * offP, aimY = ty + dy * along + dx * offP;
+      // bombs keep 55% of the plane's speed while they fall, so release early
+      const lead = spd * 0.55 * BOMB_FALL;
+      plane.targets.push({ rx: aimX - dx * lead, ry: aimY - dy * lead });
     }
     bombers.push(plane);
   }
@@ -2151,20 +2177,21 @@ function updateBombers(dt) {
   }
   for (const p of bombers) {
     p.x += p.vx * dt;
-    p.y += scrollSpeed * 0.15 * dt;      // flying, so only a little scroll drift
+    p.y += p.vy * dt;
     for (const t of p.targets) {
-      if (!t.dropped && p.x >= t.releaseX) {
+      // release once the plane has flown past the release point along its heading
+      if (!t.dropped && (p.x - t.rx) * p.vx + (p.y - t.ry) * p.vy >= 0) {
         t.dropped = true;
-        bombs.push({ x: p.x, y: p.y, vx: p.vx * 0.55, t: 0 });
+        bombs.push({ x: p.x, y: p.y, vx: p.vx * 0.55, vy: p.vy * 0.55, t: 0 });
       }
     }
   }
-  bombers = bombers.filter(p => p.x < LW + 80);
+  bombers = bombers.filter(p => p.x < LW + 90 && p.y > -140 && p.y < LH + 140);
 
   for (const b of bombs) {
     b.t += dt;
     b.x += b.vx * dt;
-    b.y += scrollSpeed * 0.5 * dt;
+    b.y += b.vy * dt;
     if (b.t >= BOMB_FALL) {
       b.done = true;
       boom(b.x, b.y, '#ffb347', 18);
@@ -2200,12 +2227,14 @@ function drawBombers() {
     // shadow far below on the water
     ctx.save();
     ctx.translate(p.x + 22, p.y + 30);
+    ctx.rotate(p.ang);
     ctx.scale(0.7, 0.7);
     drawB2(0.7, 'rgba(0,0,0,0.22)');
     ctx.restore();
 
     ctx.save();
     ctx.translate(p.x, p.y);
+    ctx.rotate(p.ang);
     drawB2(1, '#4a525e', '#16191e');
     // centre-body hump, cockpit, intakes
     ctx.fillStyle = '#5a636f';
@@ -2234,25 +2263,53 @@ function updatePassing(dt) {
 }
 
 function drawPassing() {
-  if (passing.t > 3) return;
-  const a = Math.min(1, passing.t * 4) * Math.min(1, (3 - passing.t) * 2);
-  const text = 'NOW PASSING  ' + passing.flag + ' ' + passing.name;
+  const D = 3.2;                                    // seconds on screen
+  if (passing.t > D) return;
+  const t = passing.t;
+  const a = Math.min(1, t * 3) * Math.min(1, (D - t) * 2);
+  const slide = (1 - Math.min(1, t * 4)) * -24;    // drops in from above
+  const cx = LW / 2, cy = 190 + slide;
+  const words = passing.name.split(' ');
+  // long names wrap onto two lines
+  const lines = passing.name.length > 9 && words.length > 1 ? words : [passing.name];
+  const size = lines.length > 1 ? 36 : 44;
+
   ctx.save();
   ctx.globalAlpha = a;
-  ctx.font = 'bold 13px ' + MONO;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  const w = ctx.measureText(text).width + 24;
-  const x = LW / 2 - w / 2, y = 62;
-  ctx.fillStyle = 'rgba(0,0,0,0.6)';
-  ctx.fillRect(x + 3, y + 3, w, 24);
-  ctx.fillStyle = '#0d1f2d';
-  ctx.fillRect(x, y, w, 24);
-  ctx.strokeStyle = '#5bc0f8';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(x + 1, y + 1, w - 2, 22);
-  ctx.fillStyle = '#e0e8f0';
-  ctx.fillText(text, LW / 2, y + 12.5);
+  ctx.lineJoin = 'round';
+
+  // dim band behind the text so it reads over anything
+  const bandH = 64 + lines.length * size;
+  const bg = ctx.createLinearGradient(0, cy - bandH / 2, 0, cy + bandH / 2);
+  bg.addColorStop(0, 'rgba(0,10,20,0)');
+  bg.addColorStop(0.25, 'rgba(0,10,20,0.6)');
+  bg.addColorStop(0.75, 'rgba(0,10,20,0.6)');
+  bg.addColorStop(1, 'rgba(0,10,20,0)');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, cy - bandH / 2, LW, bandH);
+
+  let y = cy - (lines.length * size) / 2 - 8;
+  ctx.font = 'bold 14px ' + MONO;
+  ctx.fillStyle = '#7fd3ff';
+  ctx.fillText('▸ NOW PASSING ◂', cx, y - 6);
+
+  const fl = flagSprite(passing.flag);
+  const fh = 26, fw = fl.w * (fh / fl.h);
+  y += 4;
+  ctx.font = `800 ${size}px ` + MONO;
+  lines.forEach((line, i) => {
+    const ly = y + size / 2 + i * size;
+    ctx.lineWidth = 7;
+    ctx.strokeStyle = '#000';
+    ctx.strokeText(line, cx + 3, ly + 3);          // hard drop shadow
+    ctx.strokeStyle = '#06121c';
+    ctx.strokeText(line, cx, ly);
+    ctx.fillStyle = '#fff2d8';
+    ctx.fillText(line, cx, ly);
+  });
+  ctx.drawImage(fl.img, cx - fw / 2, y + lines.length * size + 6, fw, fh);
   ctx.restore();
 }
 
@@ -2447,6 +2504,8 @@ function startGame() {
 }
 
 // ── UI ───────────────────────────────────────────────────────────
+document.getElementById('version').textContent = VERSION;
+
 document.getElementById('flag-row').addEventListener('click', e => {
   const btn = e.target.closest('[data-idx]');
   if (!btn) return;
