@@ -9,3 +9,6 @@ __pycache__/
 # Data dump folder — contents are local only, never commit
 datadump/*
 !datadump/.gitkeep
+
+# Cloudflare Worker local state
+leaderboard/.wrangler/

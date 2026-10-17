@@ -350,6 +350,24 @@
       margin-bottom: 10px;
     }
 
+    .lb-tabs { display: flex; gap: 8px; margin-bottom: 10px; }
+    .lb-tabs.hidden { display: none; }
+    .lb-tab {
+      flex: 1;
+      background: transparent;
+      border: 2px solid var(--line);
+      color: var(--text-dim);
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: bold;
+      letter-spacing: 0.06em;
+      padding: 7px 4px;
+      cursor: pointer;
+    }
+    .lb-tab.sel { border-color: var(--cyan); background: #12304d; color: #f0f6fc; box-shadow: 3px 3px 0 #000; }
+    .lb-status { font-size: 0.75rem; color: var(--text-dim); min-height: 1.2em; margin-bottom: 6px; }
+    .lb-table tr.gap td { text-align: center; color: var(--text-dim); padding: 2px; background: none; }
+
     .lb-table {
       width: 100%;
       border-collapse: collapse;
@@ -537,6 +555,11 @@
       <span>HULL DMG <b id="run-dmg">0</b>%</span>
     </div>
     <div class="lb-title">HALL OF FALLEN TANKERS</div>
+    <div class="lb-tabs" id="lb-tabs">
+      <button class="lb-tab sel" data-view="global">GLOBAL TOP 10</button>
+      <button class="lb-tab" data-view="local">MY BEST</button>
+    </div>
+    <p class="lb-status" id="lb-status"></p>
     <table class="lb-table">
       <thead><tr><th>#</th><th>TANKER</th><th>NM</th><th>DMG</th><th>DATE</th></tr></thead>
       <tbody id="lb-body"></tbody>
@@ -569,7 +592,7 @@
 const canvas = document.getElementById('c');
 let   ctx    = canvas.getContext('2d');   // swapped briefly to draw how-to-play icons
 // Bump on every change so it's obvious on a phone whether a fresh copy loaded.
-const VERSION = 'v2.0';
+const VERSION = 'v2.1';
 const LW = 400, LH = 720;
 const MONO = "ui-monospace, 'SF Mono', Menlo, Consolas, 'DejaVu Sans Mono', 'Courier New', monospace";
 
@@ -626,6 +649,7 @@ let distance     = 0;
 let selectedFlag = 0;
 let tankerName   = 'MV CRUDE JUSTICE';
 let deathReason  = '';
+let runStartedAt = 0;
 let dyingTimer   = 0;
 let eatenTimer   = 0;
 let leaderboardShown = false;
@@ -2571,6 +2595,75 @@ function saveLB(entry) {
   return lb;
 }
 
+// Global board lives in a Cloudflare Worker (see /leaderboard in the repo).
+// Leave LB_API empty to run with the per-browser board only.
+const LB_API = '';
+
+const lbState = { view: 'global', global: null, you: null, local: [], localYou: null, run: 0 };
+
+function lbDate(ms) {
+  return new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+async function submitScore(entry, durationMs) {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 8000);
+  try {
+    const res = await fetch(LB_API + '/scores', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: entry.name, flag: entry.flag, nm: entry.nm, damage: entry.damage, durationMs }),
+      signal: ctl.signal,
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function lbRow(rank, e, isYou) {
+  const tr = document.createElement('tr');
+  if (isYou) tr.className = 'you';
+  tr.innerHTML =
+    `<td>${rank}</td>` +
+    `<td>${escapeHtml(e.flag)} ${escapeHtml(e.name)}</td>` +
+    `<td>${e.nm}</td>` +
+    `<td>${e.damage ?? 100}%</td>` +
+    `<td>${escapeHtml(e.date)}</td>`;
+  return tr;
+}
+
+function renderLeaderboard() {
+  const st = lbState;
+  document.querySelectorAll('.lb-tab').forEach(t => t.classList.toggle('sel', t.dataset.view === st.view));
+  const tbody = document.getElementById('lb-body');
+  tbody.innerHTML = '';
+
+  if (st.view === 'local') {
+    st.local.forEach((e, i) => tbody.appendChild(lbRow(i + 1, e, e.ts === st.localYou)));
+    return;
+  }
+  if (!st.global) return;                       // still loading
+  st.global.forEach((e, i) => tbody.appendChild(
+    lbRow(i + 1, { ...e, date: lbDate(e.created_at) }, st.you && e.id === st.you.id)));
+  // didn't make the top 10? show where you landed underneath
+  if (st.you && !st.global.some(e => e.id === st.you.id)) {
+    const gap = document.createElement('tr');
+    gap.className = 'gap';
+    gap.innerHTML = '<td colspan="5">⋯</td>';
+    tbody.appendChild(gap);
+    tbody.appendChild(lbRow(st.you.rank, { ...st.you.entry, name: st.you.name }, true));
+  }
+}
+
+document.getElementById('lb-tabs').addEventListener('click', e => {
+  const tab = e.target.closest('.lb-tab');
+  if (!tab) return;
+  lbState.view = tab.dataset.view;
+  renderLeaderboard();
+});
+
 function showLeaderboard() {
   const nm = Math.floor(distance / NM_PX);
   const dmg = Math.floor(damage);
@@ -2579,29 +2672,45 @@ function showLeaderboard() {
     flag: FLAGS[selectedFlag].emoji,
     nm,
     damage: dmg,
-    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    date: lbDate(Date.now()),
+    ts: Date.now(),
   };
-  const lb = saveLB(entry);
+  const st = lbState;
+  st.local = saveLB(entry);
+  st.localYou = entry.ts;
+  st.global = null;
+  st.you = null;
+  const run = ++st.run;                         // ignore replies from older runs
 
   document.getElementById('death-msg').textContent = deathReason;
   document.getElementById('run-nm').textContent = nm;
   document.getElementById('run-dmg').textContent = dmg;
+  const status = document.getElementById('lb-status');
 
-  const tbody = document.getElementById('lb-body');
-  tbody.innerHTML = '';
-  lb.forEach((e, i) => {
-    const tr = document.createElement('tr');
-    if (e.name === tankerName && e.nm === nm && (e.damage ?? -1) === dmg) tr.className = 'you';
-    const d = e.damage ?? 100;
-    tr.innerHTML =
-      `<td>${i + 1}</td>` +
-      `<td>${e.flag} ${escapeHtml(e.name)}</td>` +
-      `<td>${e.nm}</td>` +
-      `<td>${d}%</td>` +
-      `<td>${e.date}</td>`;
-    tbody.appendChild(tr);
-  });
+  if (!LB_API) {
+    document.getElementById('lb-tabs').classList.add('hidden');
+    status.textContent = '';
+    st.view = 'local';
+  } else {
+    st.view = 'global';
+    status.textContent = 'Reporting to fleet command…';
+    submitScore(entry, performance.now() - runStartedAt)
+      .then(res => {
+        if (run !== st.run) return;
+        st.global = res.top;
+        st.you = { ...res.you, entry };
+        status.textContent = `Global rank #${res.you.rank}`;
+        renderLeaderboard();
+      })
+      .catch(() => {
+        if (run !== st.run) return;
+        status.textContent = "Couldn't reach fleet command. Showing your runs on this device.";
+        st.view = 'local';
+        renderLeaderboard();
+      });
+  }
 
+  renderLeaderboard();
   document.getElementById('lb-panel').classList.remove('hidden');
 }
 
@@ -2636,6 +2745,7 @@ function startGame() {
   hitFlash     = 0;
   leaderboardShown = false;
   deathReason  = '';
+  runStartedAt = performance.now();
 
   document.getElementById('start-panel').classList.add('hidden');
   document.getElementById('lb-panel').classList.add('hidden');
